@@ -21,6 +21,7 @@ export function validApplication() {
     genderSex: "Male",
   });
   Object.assign(app.nicotineSmoking, {
+    nic_ever_used: true,
     nic_used_12m: true,
     nic_type_and_amount: "Synthetic test only",
   });
