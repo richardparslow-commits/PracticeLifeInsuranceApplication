@@ -65,6 +65,7 @@ export default function App() {
     event.preventDefault()
     setSubmitAttempted(true)
     if (!consents.contact || !consents.authorization) return
+    if (!event.currentTarget.reportValidity()) return
 
     const application = sections.flatMap((s) =>
       visibleQuestions(s, answers)
@@ -177,7 +178,7 @@ export default function App() {
                 Submitting opens your email application with your practice answers; review the message
                 there before sending. Standard email may not be secure.
               </p>
-              <form onSubmit={submitContactRequest}>
+              <form noValidate onSubmit={submitContactRequest}>
                 <div className="contact-fields">
                   <label>Name
                     <input value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} />
