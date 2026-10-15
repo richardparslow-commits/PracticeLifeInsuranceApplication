@@ -1,7 +1,4 @@
-import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
-
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [react()],
-})
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+import { fileURLToPath, URL } from 'node:url';
+export default defineConfig({plugins:[react()],resolve:{alias:{'@':fileURLToPath(new URL('./src',import.meta.url))}},test:{testTimeout:30000,environment:'jsdom',setupFiles:['./tests/setup.ts'],exclude:['node_modules/**','supabase/**']}});

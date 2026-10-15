@@ -1,0 +1,2 @@
+[functions.send-practice-application]
+verify_jwt = false

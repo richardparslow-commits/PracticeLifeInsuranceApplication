@@ -1,2 +1,9 @@
-:root { font-family: system-ui, Segoe UI, Roboto, sans-serif; color: #0f172a; background: #f8fafc; line-height: 1.45; }
-body { margin: 0; }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root{--background:48 23% 96%;--foreground:175 32% 15%;--card:0 0% 100%;--primary:168 53% 22%;--primary-foreground:0 0% 100%;--secondary:130 19% 92%;--secondary-foreground:175 32% 15%;--muted:130 15% 94%;--muted-foreground:175 15% 34%;--accent:130 19% 92%;--accent-foreground:175 32% 15%;--destructive:0 72% 39%;--destructive-foreground:0 0% 100%;--border:155 16% 79%;--input:155 16% 63%;--ring:168 53% 22%;--radius:.65rem}
+@layer base{*{@apply border-border}body{@apply bg-background text-foreground antialiased}button,input,select,textarea{font:inherit}h1,h2{font-family:Georgia,serif}input,button,[role=checkbox],[role=radio]{touch-action:manipulation}}
+@keyframes consentFlash{0%,100%{background:#a91919;border-color:#a91919;color:white}50%{background:#174c9c;border-color:#174c9c;color:white}}
+.consent-missing{animation:consentFlash 2s ease-in-out infinite;border:2px solid #a91919}
+@media(prefers-reduced-motion:reduce){.consent-missing{animation:none;background:#a91919;color:white}}
+@media print{body{background:white}.no-print,button,[data-slot=accordion-trigger] svg{display:none!important}[data-slot=accordion-content]{display:block!important;height:auto!important;overflow:visible!important}[data-slot=accordion-item]{break-inside:auto}textarea{height:auto;overflow:visible}header{display:none}.print-values{display:block!important}.screen-form{display:none!important}}
