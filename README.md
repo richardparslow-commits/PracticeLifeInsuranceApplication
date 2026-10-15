@@ -66,6 +66,8 @@ Email API reference: https://resend.com/docs/api-reference/emails/send-email
 - Both consents must be literal `true` on the server, followed by full server schema validation. Malformed requests, missing secrets, validation failures, and email failures never produce a success state.
 - Autosave and Save draft use the supplied draft schema; consent values are excluded and always reset when restoring. Invalid/incomplete medication rows can prevent saving the latest edit until completed; the UI reports that case.
 - Successful email acceptance shows a thank-you and clears the saved draft. Failed or unconfirmed delivery preserves it.
+- Sending saves the latest validated draft immediately and temporarily disables editing and draft actions. A failed send re-enables the same answers.
+- Clear draft deletes the saved copy and starts a fresh form, including collapsed sections and consent state. Autosave resumes after a new edit. If browser storage refuses deletion, the worksheet stays open and reports the failure.
 - Print / Save as PDF includes a readable JSON snapshot of the active answers; collapsed sections are included. The browser handles printing locally.
 
 ## Source gaps handled

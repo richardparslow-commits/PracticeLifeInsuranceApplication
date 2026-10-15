@@ -161,6 +161,19 @@ const progressKeys = [
   "occupationFinancial.occ_annual_salary",
 ];
 export default function PracticeApplicationForm() {
+  const [generation, setGeneration] = useState(0);
+  return (
+    <Worksheet
+      key={generation}
+      cleared={generation > 0}
+      onClear={() => setGeneration((previous) => previous + 1)}
+    />
+  );
+}
+function Worksheet({ cleared, onClear }: {
+  cleared: boolean;
+  onClear: () => void;
+}) {
   const [initial] = useState(loadDraft);
   const methods = useForm<FieldValues>({
     defaultValues: initial,
@@ -168,15 +181,17 @@ export default function PracticeApplicationForm() {
     shouldUnregister: false,
   });
   const { control, setError, clearErrors, getValues, reset } = methods;
+  const { isDirty } = methods.formState;
   const all = useWatch({ control });
   const [open, setOpen] = useState<string[]>(["health"]);
   const [attempted, setAttempted] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [banner, setBanner] = useState<string | null>(null);
-  const [draftStatus, setDraftStatus] = useState("");
+  const [draftStatus, setDraftStatus] = useState(cleared ? "Draft cleared." : "");
   const sendingRef = useRef(false);
   const sentRef = useRef(false);
+  const hasEdited = useRef(false);
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -211,10 +226,11 @@ export default function PracticeApplicationForm() {
     }
   };
   useEffect(() => {
-    if (sent) return;
+    if (isDirty) hasEdited.current = true;
+    if (sent || !hasEdited.current) return;
     const timer = setTimeout(() => saveDraft(), 600);
     return () => clearTimeout(timer);
-  }, [all, sent]);
+  }, [all, sent, isDirty]);
   function reveal(path: string) {
     const prefix = path.split(".")[0];
     const section =
@@ -278,6 +294,9 @@ export default function PracticeApplicationForm() {
     }
     sendingRef.current = true;
     setSending(true);
+    // Persist the submitted answers before waiting for the network, even if
+    // the normal autosave debounce has not elapsed yet.
+    saveDraft();
     try {
       const { data, error } = await supabase.functions.invoke(
         "send-practice-application",
@@ -329,6 +348,7 @@ export default function PracticeApplicationForm() {
         onSubmit={submit}
         noValidate
         autoComplete="off"
+        aria-busy={sending}
         className="mx-auto max-w-3xl space-y-6 pb-16"
       >
         <Alert className="bg-secondary">
@@ -369,7 +389,12 @@ export default function PracticeApplicationForm() {
             <AlertDescription>{banner}</AlertDescription>
           </Alert>
         )}
-        <div className="screen-form">
+        {sending && (
+          <p role="status">
+            Sending your worksheet. Editing will resume if sending fails.
+          </p>
+        )}
+        <fieldset disabled={sending} className="screen-form min-w-0">
           <Accordion
             type="multiple"
             value={open}
@@ -401,7 +426,7 @@ export default function PracticeApplicationForm() {
               }
             />
           </div>
-        </div>
+        </fieldset>
         <div className="print-values hidden">
           <h2 className="text-2xl">
             Practice worksheet — not a formal application
@@ -417,6 +442,7 @@ export default function PracticeApplicationForm() {
           <Button
             type="button"
             variant="outline"
+            disabled={sending}
             onClick={() => saveDraft(true)}
           >
             Save draft
@@ -424,6 +450,7 @@ export default function PracticeApplicationForm() {
           <Button
             type="button"
             variant="outline"
+            disabled={sending}
             onClick={() => window.print()}
           >
             Print / Save as PDF
@@ -431,19 +458,24 @@ export default function PracticeApplicationForm() {
           <Button
             type="button"
             variant="ghost"
+            disabled={sending}
             onClick={() => {
               if (
                 window.confirm(
                   "Clear this worksheet and delete its saved draft from this device?",
                 )
               ) {
-                reset(EMPTY);
                 try {
                   localStorage.removeItem(DRAFT_KEY);
-                } catch {}
-                setAttempted(false);
-                setBanner(null);
-                setDraftStatus("Draft cleared.");
+                } catch {
+                  setBanner(
+                    "This browser could not delete the saved draft. Your worksheet has been kept so you can try again.",
+                  );
+                  return;
+                }
+                // A fresh form instance clears uncontrolled inputs, Controller
+                // defaults, collapsed sections, and pending autosave timers.
+                onClear();
               }
             }}
           >
