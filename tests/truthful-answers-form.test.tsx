@@ -111,4 +111,19 @@ describe("truthful answers through the worksheet", () => {
       "Angina; synthetic test diagnosis and treatment",
     );
   }, 15000);
+  it("counts the new nicotine history answer before showing 100% progress", async () => {
+    const app = validApplication();
+    delete app.nicotineSmoking.nic_ever_used;
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(app));
+    const user = userEvent.setup();
+    render(<PracticeApplicationForm />);
+    const progress = screen.getByRole("progressbar", { name: "Main questions answered" });
+    expect(Number(progress.getAttribute("value"))).toBeLessThan(100);
+    await user.click(screen.getByRole("button", { name: "3. Nicotine / Smoking" }));
+    const history = screen.getByRole("radiogroup", {
+      name: "Have you ever used tobacco or nicotine products in any form?",
+    });
+    await user.click(within(history).getByRole("radio", { name: "Yes" }));
+    expect(progress).toHaveAttribute("value", "100");
+  }, 15000);
 });

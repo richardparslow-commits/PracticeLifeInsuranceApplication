@@ -147,6 +147,7 @@ function loadDraft() {
 const progressKeys = [
   ...healthQs.map((q) => "healthMedical." + q.key),
   ...nicotineQs.map((q) => "nicotineSmoking." + q.key),
+  "nicotineSmoking.nic_ever_used",
   ...alcoholQs.map((q) => "alcoholUse." + q.key),
   ...drivingQs.map((q) => "drivingRecord." + q.key),
   ...criminalQs.map((q) => "criminalRecord." + q.key),
