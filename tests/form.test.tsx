@@ -11,15 +11,15 @@ vi.mock("../src/integrations/supabase/client", () => ({
   supabase: { functions: { invoke } },
 }));
 const contact = () =>
-  screen.getByRole("checkbox", { name: "Consent to Contact", exact: true });
+  screen.getByRole("checkbox", { name: "Consent to Contact" });
 const acknowledgment = () =>
-  screen.getByRole("checkbox", { name: "Acknowledgment & Consent", exact: true });
+  screen.getByRole("checkbox", { name: "Acknowledgment & Consent" });
 describe("practice form", () => {
   it("renders all 12 accordion sections and gates consent before other validation", async () => {
     const user = userEvent.setup();
     render(<PracticeApplicationForm />);
-    expect(screen.getByRole("checkbox", { name: "Consent to Contact", exact: true })).toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: "Acknowledgment & Consent", exact: true })).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Consent to Contact" })).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Acknowledgment & Consent" })).toBeInTheDocument();
     for (const section of SECTIONS)
       expect(
         screen.getByRole("button", { name: section.title }),
