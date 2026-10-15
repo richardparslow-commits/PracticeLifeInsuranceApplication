@@ -1,7 +1,7 @@
 # Verification
 
 - Production build: passed (`npm run build`).
-- Automated checks: 30 passed in 3 files (`npm test -- --maxWorkers=1`).
+- Automated checks: 34 passed in 3 files (`npm test -- --maxWorkers=1`).
 - Original schema preserved byte-for-byte. SHA-256: `957610f2b0fa1b08d62abe9c030d620e87f4db5d8d3e98e13739f6fc081e8bea`.
 - Source and server schema copies match.
 - All 12 accordion sections are present.
@@ -9,8 +9,13 @@
 - Active-duty and Chapter 7 follow-ups toggle correctly.
 - Missing consent prevents email invocation and applies flashing styles independently to each box.
 - Draft save/load excludes consent; successful provider acceptance clears the draft; provider failure preserves it.
+- Clear draft resets all form state and cancels pending autosave; a new edit resumes autosave. Storage deletion failures retain the worksheet and display an error.
+- Pending delivery disables editing and draft actions, immediately saves the submitted answers, and re-enables the worksheet after failure.
+- Autosave captures answers reverted to their originally loaded values.
 - Server tests reject each missing consent, truthy string consent, malformed JSON, invalid applications, and missing email configuration.
 - Server success test verifies fixed recipient and formatted full JSON using a mocked Resend response. No real email was sent.
 - Chrome rendered the production app and missing-consent state; 390 px layout visually inspected.
 
 No live Supabase deployment, real email delivery, full assistive-technology audit, or formal WCAG certification was performed. See README.md for unchanged source-schema limitations and setup requirements.
+
+The draft lifecycle follow-up was verified with component/server tests and the production build. The connected browser was unavailable during this follow-up, so the Lovable preview was not retested live; the Chrome observations above refer to the earlier verification.

@@ -15,6 +15,78 @@ const contact = () =>
 const acknowledgment = () =>
   screen.getByRole("checkbox", { name: "Acknowledgment & Consent" });
 describe("practice form", () => {
+  it("does not recreate a cleared draft and resumes autosave after a new edit", async () => {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(validApplication()));
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    const user = userEvent.setup();
+    render(<PracticeApplicationForm />);
+    await user.type(screen.getByLabelText("Name"), " before clearing");
+    await user.click(screen.getByRole("button", { name: "Clear draft" }));
+    await new Promise((r) => setTimeout(r, 800));
+    expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+    expect(screen.getByLabelText("Name")).toHaveValue("");
+    for (const radio of screen.getAllByRole("radio"))
+      expect(radio).not.toBeChecked();
+    expect(contact()).not.toBeChecked();
+    expect(acknowledgment()).not.toBeChecked();
+    await user.type(screen.getByLabelText("Name"), "New draft");
+    await waitFor(() =>
+      expect(JSON.parse(localStorage.getItem(DRAFT_KEY)!).optionalContact.contact_name)
+        .toBe("New draft"),
+    );
+    confirm.mockRestore();
+  });
+  it("locks edits during delivery and restores them after failure with the latest draft saved", async () => {
+    let finish!: (value: unknown) => void;
+    invoke.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(validApplication()));
+    const user = userEvent.setup();
+    render(<PracticeApplicationForm />);
+    await user.click(contact());
+    await user.click(acknowledgment());
+    await user.type(screen.getByLabelText("Name"), " latest");
+    await user.click(screen.getByRole("button", { name: "Submit / Contact Me" }));
+    expect(screen.getByLabelText("Name")).toBeDisabled();
+    expect(contact()).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Clear draft" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save draft" })).toBeDisabled();
+    expect(JSON.parse(localStorage.getItem(DRAFT_KEY)!).optionalContact.contact_name)
+      .toBe("Test Applicant latest");
+    finish({ data: { ok: false }, error: null });
+    await screen.findByText(/Sending could not be confirmed/);
+    expect(screen.getByLabelText("Name")).toBeEnabled();
+    expect(contact()).toBeEnabled();
+    expect(screen.getByLabelText("Name")).toHaveValue("Test Applicant latest");
+    expect(invoke).toHaveBeenCalledTimes(1);
+  });
+  it("keeps the worksheet and reports when the browser cannot delete its draft", async () => {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(validApplication()));
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    const remove = vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => {
+      throw new Error("Storage unavailable");
+    });
+    const user = userEvent.setup();
+    render(<PracticeApplicationForm />);
+    await user.click(screen.getByRole("button", { name: "Clear draft" }));
+    expect(screen.getByText(/could not delete the saved draft/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Name")).toHaveValue("Test Applicant");
+    expect(localStorage.getItem(DRAFT_KEY)).not.toBeNull();
+    remove.mockRestore();
+    confirm.mockRestore();
+  });
+  it("autosaves when the user returns to the originally loaded answer", async () => {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(validApplication()));
+    const user = userEvent.setup();
+    render(<PracticeApplicationForm />);
+    const name = screen.getByLabelText("Name");
+    await user.type(name, " edited");
+    await waitFor(() => expect(JSON.parse(localStorage.getItem(DRAFT_KEY)!).optionalContact.contact_name)
+      .toBe("Test Applicant edited"));
+    await user.clear(name);
+    await user.type(name, "Test Applicant");
+    await waitFor(() => expect(JSON.parse(localStorage.getItem(DRAFT_KEY)!).optionalContact.contact_name)
+      .toBe("Test Applicant"));
+  });
   it("renders all 12 accordion sections and gates consent before other validation", async () => {
     const user = userEvent.setup();
     render(<PracticeApplicationForm />);
