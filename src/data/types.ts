@@ -32,6 +32,7 @@ export interface Section {
   description?: string
   questions: Question[]
   followUps?: FollowUpGroup[]
+  followUpQuestionId?: string
 }
 
 export type Answers = Record<string, string | string[]>

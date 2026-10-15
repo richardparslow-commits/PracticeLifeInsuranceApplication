@@ -34,6 +34,7 @@ const health: Section = {
   id: 'health',
   title: 'Health / Medical Questions',
   description: 'Answer every question. Additional questions appear at the bottom of this section if you select certain conditions.',
+  followUpQuestionId: 'h_conditions',
   questions: [
     q('h_dob', 'What is your Date of Birth?', 'date'),
     q('h_age', 'What is your Age?', 'number'),
@@ -50,6 +51,8 @@ const health: Section = {
 const mental: Section = {
   id: 'mental',
   title: 'Mental Health Questions',
+  description: 'Select all applicable conditions. Additional questions appear at the bottom of this section when a listed condition applies.',
+  followUpQuestionId: 'm_conditions',
   questions: [
     q('m_history', 'Do you have any history of or current treatment for psychological, mood, or anxiety disorders?'),
     q('m_conditions', 'What mental health, nervous, or psychiatric conditions apply to you?', 'multiselect', {
