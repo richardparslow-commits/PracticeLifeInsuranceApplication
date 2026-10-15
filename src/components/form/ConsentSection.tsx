@@ -44,6 +44,7 @@ function ConsentBox({
         defaultValue={false}
         render={({ field }) => (
           <label
+            htmlFor={`consents.${name}`}
             data-consent={name}
             className={cn(
               "flex cursor-pointer items-start gap-3 rounded-md border p-3 text-sm leading-relaxed",
@@ -53,12 +54,15 @@ function ConsentBox({
             <Checkbox
               className="mt-1 bg-white"
               id={`consents.${name}`}
-              aria-describedby={error ? `error-${name}` : undefined}
+              ref={field.ref}
+              onBlur={field.onBlur}
+              aria-label={name === "consent_contact" ? "Consent to Contact" : "Acknowledgment & Consent"}
+              aria-describedby={`consent-text-${name}${error ? ` error-${name}` : ""}`}
               aria-invalid={!!error && !field.value}
               checked={field.value === true}
               onCheckedChange={(c) => field.onChange(c === true)}
             />
-            <span>{text}</span>
+            <span id={`consent-text-${name}`}>{text}</span>
           </label>
         )}
       />
