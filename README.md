@@ -6,7 +6,7 @@ Sections: Health/Medical, Mental Health, Nicotine/Smoking, Alcohol, Risky Behavi
 
 Selecting conditions in the Health/Medical checklist (e.g., seizures, sleep apnea/COPD, stroke/TIA/heart attack, high blood pressure, diabetes, arthritis, asthma, cancer) reveals condition-specific follow-up questions at the bottom of that section.
 
-Questions live in `src/data/` (`sections.ts`, `followups.ts`). Answers are stored only in the browser; nothing is submitted.
+Questions live in `src/data/` (`sections.ts`, `followups.ts`). Answers are stored only in the browser. The optional contact section opens the user's email application with their answers only after both consent boxes are checked; it does not send email automatically.
 
 ```
 npm install
