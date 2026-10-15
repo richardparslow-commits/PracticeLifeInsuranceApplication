@@ -39,7 +39,8 @@ export const seizureSpec: ModuleSpec = {
     },
     {
       key: "seizure_medications",
-      label: "Anticonvulsant medications (name, dosage, start date, adherence)",
+      label:
+        "Anticonvulsant medications (leave empty if none; otherwise include name, dosage, start date, adherence)",
       type: "medsDetailed",
     },
     {
@@ -293,7 +294,7 @@ export const hypertensionSpec: ModuleSpec = {
     },
     {
       key: "htn_current_meds",
-      label: "Current prescription medications",
+      label: "Current prescription medications (leave empty if none)",
       type: "meds",
     },
     {
@@ -375,7 +376,11 @@ export const diabetesSpec: ModuleSpec = {
       type: "date",
       showWhen: { key: "dm_control_method", includes: "Insulin" },
     },
-    { key: "dm_current_meds", label: "All current medications", type: "meds" },
+    {
+      key: "dm_current_meds",
+      label: "All current medications (leave empty if none)",
+      type: "meds",
+    },
     {
       key: "dm_last_blood_sugar",
       label: "Last blood sugar reading",

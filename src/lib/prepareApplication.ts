@@ -1,4 +1,4 @@
-// Presentation-only pruning. The unchanged draft/submit schemas remain the validators.
+// Prune inactive answers before the draft/submit schemas validate the payload.
 type Answers = Record<string, any>;
 export const moduleConditions: Record<string, string[]> = {
   seizureModule: ["Seizure Disorder", "Seizures"],
@@ -24,6 +24,8 @@ export const moduleConditions: Record<string, string[]> = {
 export function pruneHidden(input: Answers): Answers {
   const app = structuredClone(input);
   const selected = app.healthMedical?.conditions_triggered ?? [];
+  if (!selected.includes("Other") && app.healthMedical)
+    delete app.healthMedical.medical_other_conditions;
   for (const [key, triggers] of Object.entries(moduleConditions))
     if (
       !triggers.some((t) => selected.includes(t)) &&
@@ -104,7 +106,9 @@ export function pruneHidden(input: Answers): Answers {
   const n = app.nicotineSmoking;
   if (n) {
     if (n.nic_used_12m !== true) delete n.nic_type_and_amount;
-    if (n.nic_used_12m !== false) delete n.nic_date_last_used;
+    if (n.nic_used_12m !== false || n.nic_ever_used === false)
+      delete n.nic_date_last_used;
+    if (n.nic_ever_used === false) n.nic_products = [];
   }
   const r = app.riskyBehavior;
   if (r) {

@@ -68,7 +68,7 @@ const detailedMedicationItemSchema = z.object({
 export const CONDITION_TRIGGERS = [
   "Arthritis","Asthma","Cancer","Diabetes 1 or 2","High Blood Pressure","Emphysema","Sleep Apnea",
   "Asbestosis","Cystic Fibrosis","Tuberculosis","Lung Cancer","Sarcoidosis","Pulmonary Fibrosis",
-  "COPD","Chronic Bronchitis","Seizure Disorder","Seizures","Stroke","TIA","Heart Attack",
+  "COPD","Chronic Bronchitis","Seizure Disorder","Seizures","Stroke","TIA","Heart Attack","Other",
 ] as const;
 export type ConditionTrigger = (typeof CONDITION_TRIGGERS)[number];
 
@@ -131,6 +131,7 @@ const healthMedicalBase = z.object({
   medical_current_medications: z.array(medicationItemSchema).default([]),
 
   conditions_triggered: z.array(z.enum(CONDITION_TRIGGERS)).default([]),
+  medical_other_conditions: optLongText,
 });
 
 /* Condition modules ------------------------------------------------------- */
@@ -143,7 +144,7 @@ export const seizureModuleSchema = z.object({
   seizure_most_recent_date: isoDate,
   seizure_frequency: text.min(1, "Required"),
   seizure_treatments: longText.min(1, "Required"),
-  seizure_medications: z.array(detailedMedicationItemSchema).min(1, "List at least one medication"),
+  seizure_medications: z.array(detailedMedicationItemSchema).default([]),
   seizure_physician_name: text.min(1, "Required"),
   seizure_physician_address: longText.min(1, "Required"),
   seizure_physician_phone: phone,
@@ -261,7 +262,7 @@ export const hypertensionModuleSchema = z
   .object({
     htn_dx_date: monthYear,
     htn_meds_last12months: yesNo,
-    htn_current_meds: z.array(medicationItemSchema).min(1, "List at least one medication"),
+    htn_current_meds: z.array(medicationItemSchema).default([]),
     htn_last_doctor_visit: isoDate,
     htn_last_bp: z.string().trim().min(1, "Required"),
     htn_bp_normal_or_elevated_if_unknown: optText,
@@ -294,7 +295,7 @@ export const diabetesModuleSchema = z
     dm_dx_date: monthYear,
     dm_control_method: z.array(z.enum(["Oral Medication", "Diet Only", "Insulin"])).min(1, "Select at least one"),
     dm_insulin_start_date: optDate,
-    dm_current_meds: z.array(medicationItemSchema).min(1, "List at least one medication"),
+    dm_current_meds: z.array(medicationItemSchema).default([]),
     dm_last_blood_sugar: text.min(1, "Required"),
     dm_last_blood_sugar_date: isoDate,
     dm_last_a1c: text.min(1, "Required"),
@@ -309,6 +310,11 @@ export const diabetesModuleSchema = z
     dm_er_hospital_details: optLongText,
   })
   .superRefine((v, ctx) => {
+    const medicationTreatment = v.dm_control_method.some((method) => method !== "Diet Only");
+    if (medicationTreatment && v.dm_current_meds.length === 0)
+      ctx.addIssue({ code: "custom", path: ["dm_current_meds"], message: "List the medication used to control diabetes" });
+    if (v.dm_control_method.includes("Diet Only") && medicationTreatment)
+      ctx.addIssue({ code: "custom", path: ["dm_control_method"], message: "Choose Diet Only by itself, or select the medication treatment(s) used" });
     if (v.dm_control_method.includes("Insulin") && !v.dm_insulin_start_date)
       ctx.addIssue({ code: "custom", path: ["dm_insulin_start_date"], message: "Provide insulin start date" });
     if (v.dm_med_change && !v.dm_med_change_details)
@@ -440,6 +446,7 @@ const mentalHealthBase = z.object({
 /* -------------------------------------------------------------------------- */
 
 const nicotineBase = z.object({
+  nic_ever_used: optYesNo,
   nic_used_12_3_5y: yesNo,
   nic_used_36m: yesNo,
   nic_used_12m: yesNo,
@@ -743,6 +750,8 @@ export const practiceApplicationSubmitSchema = z
       });
     }
 
+    requireIf(ctx, sel.includes("Other"), ["healthMedical", "medical_other_conditions"], app.healthMedical.medical_other_conditions, "Describe the other condition(s), diagnosis, and treatment");
+
     /* ---- Mental health ---- */
     const mh = app.mentalHealth;
     const mhText = (mh.mh_conditions ?? "").toLowerCase();
@@ -773,7 +782,11 @@ export const practiceApplicationSubmitSchema = z
     /* ---- Nicotine ---- */
     const n = app.nicotineSmoking;
     requireIf(ctx, n.nic_used_12m, ["nicotineSmoking", "nic_type_and_amount"], n.nic_type_and_amount, "Provide type and amount");
-    requireIf(ctx, !n.nic_used_12m, ["nicotineSmoking", "nic_date_last_used"], n.nic_date_last_used, "Provide date last used (or enter 'never' in details)");
+    if (n.nic_ever_used === false && (n.nic_used_12m || n.nic_used_36m || n.nic_used_12_3_5y))
+      ctx.addIssue({ code: "custom", path: ["nicotineSmoking", "nic_ever_used"], message: "Never-use conflicts with the recent-use answers. Please review your nicotine history" });
+    // Existing drafts with a last-use date remain valid without the new ever-use answer.
+    requireIf(ctx, !n.nic_used_12m && n.nic_ever_used === undefined && !n.nic_date_last_used, ["nicotineSmoking", "nic_ever_used"], n.nic_ever_used, "Answer whether you have ever used tobacco or nicotine");
+    requireIf(ctx, !n.nic_used_12m && n.nic_ever_used === true, ["nicotineSmoking", "nic_date_last_used"], n.nic_date_last_used, "Provide date last used");
 
     /* ---- Alcohol ---- */
     const a = app.alcoholUse;

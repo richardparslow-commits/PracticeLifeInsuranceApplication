@@ -36,7 +36,7 @@ Add a Tools card linking to `/practice-application`. This package has not been d
 
 The standalone client reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (or `VITE_SUPABASE_ANON_KEY`). These public configuration values belong in `.env.local`; never put a Resend key in a `VITE_` variable. In Lovable, retain the existing configured Supabase client instead.
 
-Copy `supabase/functions/send-practice-application/` and `supabase/functions/_shared/` into the connected Supabase project. `_shared/practiceApplication.schema.ts` is an exact copy of the supplied client schema; the handler imports and runs that schema again on the server. Synchronize its unchanged contents when replacing the source schema.
+Copy `supabase/functions/send-practice-application/` and `supabase/functions/_shared/` into the connected Supabase project. `_shared/practiceApplication.schema.ts` is an exact copy of the supplied client schema; the handler imports and runs that schema again on the server. Keep its contents byte-identical when revising the source schema; deploy the function whenever server validation changes.
 
 Set the function's secrets in the Supabase dashboard:
 
@@ -59,7 +59,7 @@ Email API reference: https://resend.com/docs/api-reference/emails/send-email
 
 ## Validation and consent behavior
 
-- `src/lib/practiceApplication.schema.ts` is byte-for-byte unchanged from the attachment.
+- `src/lib/practiceApplication.schema.ts` includes the authorized truthful-answer revision described below; the server copy must remain byte-identical.
 - The supplied draft/submit schemas, `getMissingConsents`, and `canTransmit` remain the validation source of truth.
 - First, the client checks both consents; missing boxes flash red/blue and show individual errors. Then the exact submit schema validates, each issue maps to a field, and the relevant accordion opens and scrolls to the first error.
 - Presentation-only pruning removes inactive modules and stale hidden companion answers before validation. It does not replace or weaken the schema. Collapsing an accordion does not discard answers or exempt a section from validation.
@@ -74,13 +74,13 @@ Email API reference: https://resend.com/docs/api-reference/emails/send-email
 
 The supplied components lacked RiskySection and a cardio/neuro spec; both are implemented. Cardiac details also open for the schema's recent heart/brain/circulatory surgery trigger. The supplied ConsentSection contained placeholder comments for disclaimer sections 2–5; the missing text was recovered from the original attached 32-page PDF, preserving wording and normalizing extraction whitespace. The two supplied consent strings are unchanged.
 
-## Unchanged schema limitations
+## Authorized truthful-answer revision
 
-These rules remain because the user explicitly required the schema unchanged:
+Never-users can answer No to the new ever-use nicotine question without inventing a last-use date. Former users still need a date, and existing dated drafts remain valid. Contradictory never-use/recent-use answers are rejected. Empty medication lists are accepted for hypertension and seizure follow-up; BP medication in the past year does not imply current medication. Diet-only diabetes needs no medication, while oral medication or insulin selections still require a named medication. Diet Only must be selected by itself. Other condition requires diagnosis/treatment details, without opening an unrelated follow-up module. Hidden last-use and Other details are removed before validation and transmission.
 
-1. A “No” answer to nicotine use in the past 12 months requires a last-use date. There is no valid “Never used” path. The UI warns users not to invent a date and allows keeping a draft instead. This needs an authorized schema revision before a general public launch.
-2. Hypertension and diabetes modules require at least one medication, including when a person reports diet-only diabetes control or no current medicine. Do not enter invented medication data.
-3. The schema uses Date.parse for date validation and checks age only as a number; it does not ensure calendar rollover rejection or DOB/age agreement. This build does not rewrite those rules.
+Keep the client/server schema and preparation files synchronized, and deploy the updated `send-practice-application` function when releasing this revision. Website publication alone does not update server validation. Regression tests cover both schemas, the mocked handler, and the visible form flow without sending email.
+
+The remaining date rules use Date.parse and check age as a number; they do not ensure calendar rollover rejection or DOB/age agreement.
 
 ## Deployment status
 

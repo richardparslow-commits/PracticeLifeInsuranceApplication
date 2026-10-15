@@ -74,6 +74,14 @@ export function HealthSection() {
         options={CONDITION_TRIGGERS}
       />
 
+      {selected.includes("Other") && (
+        <TextAreaField
+          name="healthMedical.medical_other_conditions"
+          label="Other condition(s): diagnosis and treatment"
+          hint="Describe any condition not listed above, including when it was diagnosed and how it is treated."
+        />
+      )}
+
       {MODULE_TRIGGERS.filter(
         ({ spec, triggers }) =>
           triggers.some((t) => selected.includes(t)) ||
@@ -275,6 +283,7 @@ export function MentalHealthSection() {
 export function NicotineSection() {
   const { control } = useFormContext();
   const used12 = useWatch({ control, name: "nicotineSmoking.nic_used_12m" });
+  const everUsed = useWatch({ control, name: "nicotineSmoking.nic_ever_used" });
   return (
     <div className="space-y-5">
       <p className="text-xs text-muted-foreground">
@@ -282,24 +291,30 @@ export function NicotineSection() {
         cigars, pipes, snuff, patches, gum/aerosol/inhaler, hookah, clove,
         bidis, or oral nicotine pouches.
       </p>
-      <YesNoList prefix="nicotineSmoking" qs={nicotineQs} />
-      <MultiSelectField
-        name="nicotineSmoking.nic_products"
-        label="Products used"
-        options={NICOTINE_PRODUCTS}
+      <YesNoField
+        name="nicotineSmoking.nic_ever_used"
+        label="Have you ever used tobacco or nicotine products in any form?"
       />
+      <YesNoList prefix="nicotineSmoking" qs={nicotineQs} />
+      {everUsed !== false && (
+        <MultiSelectField
+          name="nicotineSmoking.nic_products"
+          label="Products used"
+          options={NICOTINE_PRODUCTS}
+        />
+      )}
       {used12 === true && (
         <TextAreaField
           name="nicotineSmoking.nic_type_and_amount"
           label="Type and amount"
         />
       )}
-      {used12 === false && (
+      {used12 === false && everUsed !== false && (
         <TextField
           name="nicotineSmoking.nic_date_last_used"
           label="Date last used"
           type="date"
-          hint="The supplied validation requires a last-use date when you answer No. If you have never used nicotine, leave this blank and save your draft; contact Richard rather than entering an invented date."
+          hint="If you have never used tobacco or nicotine, answer No to the ever-use question above. Otherwise, provide the date last used."
         />
       )}
     </div>
