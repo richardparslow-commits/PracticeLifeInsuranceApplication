@@ -24,6 +24,61 @@ export const moduleConditions: Record<string, string[]> = {
 };
 // Remove document IDs collected by older worksheets and status details that no
 // longer apply. Also used when reopening a draft, before the first new edit.
+/**
+ * The words in the free-text condition box that open the mental-health detail
+ * block. Held next to the block's field list, and used by `MentalHealthSection`
+ * through `mentalHealthDetailVisible`, so the block the visitor sees and the
+ * block `pruneHidden` keeps cannot drift apart.
+ */
+const MENTAL_HEALTH_TRIGGER_WORDS =
+  /anxiety|depression|eating disorder|suicid|adjustment|schizophrenia|mental retardation|ocd|panic|bipolar|ptsd|adhd|add|tourette/i;
+
+/**
+ * Every answer field owned by the "Additional Mental Health Details" block in
+ * `src/components/form/sections.tsx`. Listed here because the whole block is
+ * rendered only while `mentalHealthDetailVisible` holds: the fields and the rule
+ * that shows them have to be known in one place, or a new field can be added to
+ * the block while the saved draft and the mailed copy keep carrying it.
+ */
+export const MENTAL_HEALTH_DETAIL_FIELDS = [
+  "mh_selected_other_text",
+  "mh_rx_details",
+  "mh_selected_dx_date",
+  "mh_selected_last_seen",
+  "mh_selected_psychiatrist_5y",
+  "mh_selected_psychiatrist_details",
+  "mh_selected_inpatient_5y",
+  "mh_selected_inpatient_details",
+  "mh_selected_unable_work_5y",
+  "mh_selected_unable_work_details",
+  "mh_selected_suicidal_thoughts",
+  "mh_selected_suicide_attempt",
+  "mh_selected_suicide_attempt_details",
+  "mh_selected_disability",
+  "mh_selected_disability_details",
+];
+
+/**
+ * Whether the "Additional Mental Health Details" block is on screen.
+ *
+ * The block appears when a condition is checked, when the history/current
+ * treatment answer is Yes, or when the free-text box names a condition, and it
+ * leaves the screen when none of those hold. `pruneHidden` applies the same rule
+ * to the saved draft and to submit, so an answer the visitor can no longer see is
+ * never an answer they are still sending.
+ */
+export function mentalHealthDetailVisible(
+  mentalHealth: Answers | undefined,
+): boolean {
+  const mh = mentalHealth ?? {};
+  const selected: unknown = mh.mh_selected_conditions ?? [];
+  return (
+    (Array.isArray(selected) ? selected.length : 0) > 0 ||
+    mh.mh_history_current_treatment === true ||
+    MENTAL_HEALTH_TRIGGER_WORDS.test(String(mh.mh_conditions ?? ""))
+  );
+}
+
 export function sanitizeResidency(input: Answers): Answers {
   const app = structuredClone(input);
   const residency = app.residencyTravel;
@@ -96,6 +151,15 @@ export function pruneHidden(input: Answers): Answers {
       avi_accident_details: "avi_accident_grounded_fined",
     },
   };
+  // The mental-health detail block collapses when the last condition is
+  // unticked, the treatment answer is back to No, and the free-text box no longer
+  // names a condition (see `mentalHealthDetailVisible` and `MentalHealthSection`).
+  // The questions are off the screen, so every answer they held leaves the draft
+  // and the copy that is mailed - including the detail fields of the block's own
+  // Yes/No questions, which the companion map below would otherwise keep.
+  const mentalHealth = app.mentalHealth;
+  if (mentalHealth && !mentalHealthDetailVisible(mentalHealth))
+    for (const field of MENTAL_HEALTH_DETAIL_FIELDS) delete mentalHealth[field];
   for (const [section, pairs] of Object.entries(companions))
     if (app[section])
       for (const [detail, parent] of Object.entries(pairs))

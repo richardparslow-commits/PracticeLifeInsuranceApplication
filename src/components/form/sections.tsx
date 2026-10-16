@@ -24,6 +24,10 @@ import {
   MENTAL_HEALTH_OPTIONS,
   NICOTINE_PRODUCTS,
 } from "@/lib/practiceApplication.schema";
+import {
+  MENTAL_HEALTH_DETAIL_FIELDS,
+  mentalHealthDetailVisible,
+} from "@/lib/prepareApplication";
 
 const YesNoList = ({ prefix, qs }: { prefix: string; qs: Q[] }) => (
   <div className="space-y-5">
@@ -103,12 +107,13 @@ export function MentalHealthSection() {
   const v = useWatch({ control, name: "mentalHealth" }) ?? {};
   const P = "mentalHealth";
   const sel: string[] = v.mh_selected_conditions ?? [];
-  const showDetail =
-    sel.length > 0 ||
-    v.mh_history_current_treatment === true ||
-    /anxiety|depression|eating disorder|suicid|adjustment|schizophrenia|mental retardation|ocd|panic|bipolar|ptsd|adhd|add|tourette/i.test(
-      v.mh_conditions ?? "",
-    );
+  // One rule, shared with `pruneHidden`: the block is on screen exactly while the
+  // saved draft and the mailed copy are allowed to carry it.
+  const showDetail = mentalHealthDetailVisible(v);
+  const hiddenAnswers = MENTAL_HEALTH_DETAIL_FIELDS.some((field) => {
+    const value = v[field];
+    return value !== undefined && value !== null && value !== false && value !== "";
+  });
   return (
     <div className="space-y-5">
       <YesNoField
@@ -280,6 +285,13 @@ export function MentalHealthSection() {
             />
           )}
         </div>
+      )}
+      {!showDetail && hiddenAnswers && (
+        <p role="status" className="text-xs text-muted-foreground">
+          You answered the hidden mental-health details, but they are not shown
+          while this block is closed, so the saved draft and the copy that is sent
+          leave them out. Check a condition to bring them back.
+        </p>
       )}
     </div>
   );
