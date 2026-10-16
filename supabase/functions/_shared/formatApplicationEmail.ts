@@ -438,10 +438,13 @@ type ParentCondition = {
   };
 }[Section];
 export interface FieldRule {
+  /** Exact worksheet prompt or accessible control label, kept separate from the takeaway. */
+  question: string;
   label: string;
   kind: "string" | "number" | "boolean" | "array" | "medications" | "detailedMedications";
   risk: "true" | "false" | "present" | "residency" | "none";
   flagLabel?: string;
+  flagExplanation?: string;
   when?: readonly ParentCondition[];
 }
 type FieldKind<T> =
@@ -466,146 +469,225 @@ export type FieldRegistry = {
 };
 export const FIELD_REGISTRY = {
   healthMedical: {
-    dob: { label: "Date of Birth", kind: "string", risk: "none" },
-    age: { label: "Age", kind: "number", risk: "none" },
-    stateOfBirth: { label: "Birth State", kind: "string", risk: "none" },
-    genderSex: { label: "Gender / Sex", kind: "string", risk: "none" },
+    dob: {
+      question: "Date of Birth",
+      label: "Date of Birth",
+      kind: "string",
+      risk: "none",
+    },
+    age: {
+      question: "Age",
+      label: "Age",
+      kind: "number",
+      risk: "none",
+    },
+    stateOfBirth: {
+      question: "State of Birth",
+      label: "Birth State",
+      kind: "string",
+      risk: "none",
+    },
+    genderSex: {
+      question: "Gender / Sex",
+      label: "Gender / Sex",
+      kind: "string",
+      risk: "none",
+    },
     medical_past12_obesity_decline_pending: {
+      question:
+        "Within the past 12 months: surgical treatment for morbid obesity, declined for life insurance, or recommended diagnostic testing/surgery/hospitalization not completed or results not received?",
       label: "Past 12 Mo: Obesity Surgery, Prior Insurance Decline, or Pending Tests / Surgery",
       kind: "boolean",
       risk: "true",
     },
     medical_past12_consult_surgery_hospital_test: {
+      question:
+        "Within the past 12 months: consulted a medical professional, had surgery, hospitalized, or had diagnostic tests (EKG, X-ray, MRI, CAT scan; excluding HIV/AIDS)?",
       label: "Past 12 Mo: Medical Consultation, Surgery, Hospitalization, or Diagnostic Tests",
       kind: "boolean",
       risk: "true",
     },
     medical_ever_major_conditions: {
+      question:
+        "Ever diagnosed/treated for angina, stroke or TIA, cardiomyopathy, SLE, cirrhosis, Hepatitis C, chronic hepatitis, chronic pancreatitis, COPD, emphysema, chronic bronchitis, or required oxygen?",
       label: "History of Major Heart, Neurologic, Liver, or Respiratory Conditions",
       kind: "boolean",
       risk: "true",
     },
     medical_past2_heart_brain_circulatory_surgery: {
+      question:
+        "Within the past 2 years: heart attack or aneurysm, or heart/brain/circulatory surgery or procedure (incl. pacemaker, defibrillator) had or advised?",
       label: "Past 2 Yr: Heart Attack, Aneurysm, or Heart / Brain / Circulatory Procedure",
       kind: "boolean",
       risk: "true",
     },
     medical_past3_conditions_medicated: {
+      question:
+        "Within the past 3 years: treated/diagnosed/prescribed medication for chronic bronchitis, emphysema, COPD, irregular heartbeat, seizures, blood clot, or aneurysm?",
       label: "Past 3 Yr: Respiratory, Heart Rhythm, Seizure, Clot, or Aneurysm Treatment",
       kind: "boolean",
       risk: "true",
     },
     medical_past5_internal_cancer: {
+      question:
+        "Within the past 5 years: treated for internal cancer, melanoma, Hodgkin’s disease, or lymphoma?",
       label: "Past 5 Yr: Internal Cancer, Melanoma, Hodgkin's Disease, or Lymphoma",
       kind: "boolean",
       risk: "true",
     },
     medical_hiv_aids: {
+      question:
+        "Ever diagnosed, treated, tested positive, or received medical advice for HIV or AIDS?",
       label: "HIV / AIDS Diagnosis, Positive Test, Treatment, or Advice",
       kind: "boolean",
       risk: "true",
     },
     medical_past5_checkups_labs_consults: {
+      question:
+        "Within the past 5 years: any check-ups, laboratory studies (excluding HIV), or medical consultations?",
       label: "Past 5 Yr: Checkups, Laboratory Studies, or Medical Consultations",
       kind: "boolean",
       risk: "true",
     },
     medical_past7_cardio_conditions: {
+      question:
+        "Within the past 7 years: high blood pressure, heart attack, angina, arrhythmia, stroke, aneurysm, or any heart/circulatory disorder?",
       label: "Past 7 Yr: Blood Pressure, Heart, Stroke, or Circulatory Conditions",
       kind: "boolean",
       risk: "true",
     },
     medical_past7_digestive_liver_conditions: {
+      question:
+        "Within the past 7 years: diabetes, cirrhosis, hepatitis, pancreatitis, Crohn’s, ulcerative colitis, or any digestive/liver disorder?",
       label: "Past 7 Yr: Diabetes, Digestive, Pancreatic, or Liver Conditions",
       kind: "boolean",
       risk: "true",
     },
     medical_past7_respiratory_conditions: {
+      question:
+        "Within the past 7 years: asthma, emphysema, COPD, sleep apnea, or any respiratory disorder?",
       label: "Past 7 Yr: Asthma, Emphysema, COPD, Sleep Apnea, or Respiratory Conditions",
       kind: "boolean",
       risk: "true",
     },
     medical_sleep_apnea_6mo_not_treated: {
+      question: "Diagnosed with sleep apnea within the last 6 months, or not being treated?",
       label: "Sleep Apnea Diagnosed in Past 6 Mo or Not Being Treated",
       kind: "boolean",
       risk: "true",
     },
     medical_past7_neuro_mental_conditions: {
+      question:
+        "Within the past 7 years: cancer, anemia, seizures, bipolar, schizophrenia, Alzheimer’s, dementia, or mental/nervous disorder?",
       label: "Past 7 Yr: Cancer, Anemia, Seizures, Cognitive, Mental, or Nervous Conditions",
       kind: "boolean",
       risk: "true",
     },
     medical_past7_renal_repro_std_conditions: {
+      question:
+        "Within the past 7 years: kidney, bladder, prostate, reproductive organ disorder, or sexually transmitted disease?",
       label:
         "Past 7 Yr: Kidney, Bladder, Prostate, Reproductive, or Sexually Transmitted Conditions",
       kind: "boolean",
       risk: "true",
     },
     medical_past7_connective_tissue_conditions: {
+      question:
+        "Within the past 7 years: connective tissue disease, SLE, arthritis, or disorder of back, joints, muscles, or nervous system?",
       label:
         "Past 7 Yr: Connective Tissue, Lupus, Arthritis, Back, Joint, Muscle, or Nerve Conditions",
       kind: "boolean",
       risk: "true",
     },
     medical_past10_bp_cholesterol_meds: {
+      question: "In the past 10 years: medication for high blood pressure or elevated cholesterol?",
       label: "Past 10 Yr: Blood Pressure or Cholesterol Medication",
       kind: "boolean",
       risk: "true",
     },
     medical_past10_diabetes_cancer_cardiac: {
+      question:
+        "In the past 10 years: diagnosed, tested, or treated for diabetes, cancer, or cardiac disease?",
       label: "Past 10 Yr: Diabetes, Cancer, or Cardiac Disease",
       kind: "boolean",
       risk: "true",
     },
     medical_diabetes_prior21_insulin_or_complications: {
+      question:
+        "Treated for diabetes before age 21, currently on insulin, or diabetes with retinopathy, nephropathy, neuropathy, insulin shock, or diabetic coma?",
       label: "Diabetes Before Age 21, Insulin Use, or Diabetic Complications",
       kind: "boolean",
       risk: "true",
     },
     medical_work_disability: {
+      question:
+        "Currently unemployed for medical reasons, prohibited from full-time work due to illness/injury, or receiving disability benefits/pension?",
       label: "Medical Unemployment, Work Restrictions, or Disability Benefits",
       kind: "boolean",
       risk: "true",
     },
     medical_currently_hospitalized_or_needs_adl_help: {
+      question:
+        "Currently hospitalized, in a nursing facility, on hospice/home health care, or need assistance with bathing, dressing, eating, toileting?",
       label: "Currently Hospitalized or Requires ADL Assistance",
       kind: "boolean",
       risk: "true",
     },
     medical_recent_assistive_devices: {
+      question:
+        "Within the past 12 months: used a walker, wheelchair, electric scooter, supplemental oxygen, or catheter?",
       label: "Past 12 Mo: Mobility Aids, Oxygen, or Catheter",
       kind: "boolean",
       risk: "true",
     },
     medical_organ_transplant: {
+      question: "Have you been the recipient of an organ transplant?",
       label: "Organ Transplant Recipient",
       kind: "boolean",
       risk: "true",
     },
     medical_confined_facility_now: {
+      question: "Currently confined to any hospital or medical/rehabilitation facility?",
       label: "Currently Confined to a Medical or Rehabilitation Facility",
       kind: "boolean",
       risk: "true",
     },
     medical_family_history_kidney_transplant_heart_cancer: {
+      question:
+        "Has a natural parent, brother, or sister had kidney disease, major organ transplant, heart disease, cerebrovascular disease, or internal cancer before age 60?",
       label:
         "Family Kidney Disease, Transplant, Heart / Cerebrovascular Disease, or Cancer Before 60",
       kind: "boolean",
       risk: "true",
     },
     medical_family_history_multiple_early_deaths: {
+      question:
+        "Has more than one family member (father, mother, brother, sister) died before 60 from breast, colon, intestinal, or prostate cancer, or cardiovascular disease?",
       label: "Multiple Family Deaths Before 60 from Specified Cancers or Cardiovascular Disease",
       kind: "boolean",
       risk: "true",
     },
-    medical_treatment_given: { label: "Medical Treatment Details", kind: "string", risk: "none" },
+    medical_treatment_given: {
+      question: "What specific treatment was given or medication prescribed for your conditions?",
+      label: "Medical Treatment Details",
+      kind: "string",
+      risk: "none",
+    },
     medical_current_medications: {
+      question: "All current medications, including herb and vitamin supplements",
       label: "Current Medications",
       kind: "medications",
       risk: "present",
     },
-    conditions_triggered: { label: "Disclosed Medical Conditions", kind: "array", risk: "present" },
+    conditions_triggered: {
+      question:
+        "Which of these conditions apply to you? (Selecting one opens follow-up questions below.)",
+      label: "Disclosed Medical Conditions",
+      kind: "array",
+      risk: "present",
+    },
     medical_other_conditions: {
+      question: "Other condition(s): diagnosis and treatment",
       label: "Other Medical Conditions, Diagnosis, and Treatment",
       kind: "string",
       risk: "none",
@@ -614,79 +696,129 @@ export const FIELD_REGISTRY = {
   },
   mentalHealth: {
     mh_history_current_treatment: {
+      question:
+        "Do you have any history of or current treatment for psychological, mood, or anxiety disorders?",
       label: "Mental Health History or Current Treatment",
       kind: "boolean",
       risk: "true",
     },
-    mh_conditions: { label: "Mental Health Conditions and History", kind: "string", risk: "none" },
+    mh_conditions: {
+      question: "What mental health, nervous, or psychiatric conditions apply to you?",
+      label: "Mental Health Conditions and History",
+      kind: "string",
+      risk: "none",
+    },
     mh_mild_situational_recent: {
+      question:
+        "Diagnosed with Mild or Situational Depression or Anxiety within the last 6 months, or hospitalized for it?",
       label: "Recent Mild or Situational Mental Health Symptoms",
       kind: "boolean",
       risk: "true",
     },
-    mh_medications: { label: "Mental Health Medications", kind: "string", risk: "none" },
-    mh_dx_date: { label: "Mental Health Diagnosis Date", kind: "string", risk: "none" },
-    mh_last_seen: { label: "Mental Health Last Visit", kind: "string", risk: "none" },
-    mh_psychiatrist_5y: { label: "Past 5 Yr: Psychiatrist Care", kind: "boolean", risk: "true" },
+    mh_medications: {
+      question: "Current prescription medications for this condition (names, dosage, frequency)",
+      label: "Mental Health Medications",
+      kind: "string",
+      risk: "none",
+    },
+    mh_dx_date: {
+      question: "When was the condition diagnosed?",
+      label: "Mental Health Diagnosis Date",
+      kind: "string",
+      risk: "none",
+    },
+    mh_last_seen: {
+      question: "When were you last seen for it?",
+      label: "Mental Health Last Visit",
+      kind: "string",
+      risk: "none",
+    },
+    mh_psychiatrist_5y: {
+      question: "Past 5 years: seen a psychiatrist or had hospital outpatient treatment?",
+      label: "Past 5 Yr: Psychiatrist Care",
+      kind: "boolean",
+      risk: "true",
+    },
     mh_psychiatrist_details: {
+      question: "Date(s) and hospital/clinic",
       label: "Psychiatrist Care Dates and Facility",
       kind: "string",
       risk: "none",
       when: [{ section: "mentalHealth", field: "mh_psychiatrist_5y", equals: true }],
     },
     mh_inpatient_5y: {
+      question: "Past 5 years: inpatient at a hospital or clinic?",
       label: "Past 5 Yr: Psychiatric Inpatient Care",
       kind: "boolean",
       risk: "true",
     },
     mh_inpatient_details: {
+      question: "Date(s) and hospital/clinic",
       label: "Psychiatric Inpatient Dates and Facility",
       kind: "string",
       risk: "none",
       when: [{ section: "mentalHealth", field: "mh_inpatient_5y", equals: true }],
     },
     mh_unable_work_5y: {
+      question: "Past 5 years: unable to work due to your condition?",
       label: "Past 5 Yr: Unable to Work Due to Mental Health",
       kind: "boolean",
       risk: "true",
     },
     mh_unable_work_details: {
+      question: "Date and duration of each absence",
       label: "Mental Health Work Disability Dates and Duration",
       kind: "string",
       risk: "none",
       when: [{ section: "mentalHealth", field: "mh_unable_work_5y", equals: true }],
     },
-    mh_suicidal_thoughts: { label: "Suicidal Thoughts", kind: "boolean", risk: "true" },
-    mh_suicide_attempt: { label: "Suicide Attempt History", kind: "boolean", risk: "true" },
+    mh_suicidal_thoughts: {
+      question: "Have you had any suicidal thoughts?",
+      label: "Suicidal Thoughts",
+      kind: "boolean",
+      risk: "true",
+    },
+    mh_suicide_attempt: {
+      question: "Have you attempted suicide?",
+      label: "Suicide Attempt History",
+      kind: "boolean",
+      risk: "true",
+    },
     mh_suicide_attempt_details: {
+      question: "Full details, including date and follow-up treatment",
       label: "Suicide Attempt Details",
       kind: "string",
       risk: "none",
       when: [{ section: "mentalHealth", field: "mh_suicide_attempt", equals: true }],
     },
     mh_disability_history: {
+      question: "Have you ever been on disability?",
       label: "Mental Health Disability History",
       kind: "boolean",
       risk: "true",
     },
     mh_disability_details: {
+      question: "Provide details",
       label: "Mental Health Disability Details",
       kind: "string",
       risk: "none",
       when: [{ section: "mentalHealth", field: "mh_disability_history", equals: true }],
     },
     mh_selected_conditions: {
+      question: "Please check all conditions that apply",
       label: "Selected Mental Health Conditions",
       kind: "array",
       risk: "present",
     },
     mh_selected_other_text: {
+      question: "Other (describe)",
       label: "Other Mental Health Condition",
       kind: "string",
       risk: "none",
       when: [{ section: "mentalHealth", field: "mh_selected_conditions", includes: "Other" }],
     },
     mh_rx_details: {
+      question: "Current prescription medications (RX names, dosage, how often taken)",
       label: "Mental Health Prescription Details",
       kind: "string",
       risk: "none",
@@ -697,6 +829,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     mh_selected_dx_date: {
+      question: "Date of diagnosis",
       label: "Selected Condition Diagnosis Date",
       kind: "string",
       risk: "none",
@@ -707,6 +840,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     mh_selected_last_seen: {
+      question: "Date last seen for condition",
       label: "Selected Condition Last Visit",
       kind: "string",
       risk: "none",
@@ -717,6 +851,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     mh_selected_psychiatrist_5y: {
+      question: "Past 5 years: psychiatrist or hospital outpatient treatment?",
       label: "Selected Condition: Psychiatrist Care in Past 5 Yr",
       kind: "boolean",
       risk: "true",
@@ -727,12 +862,14 @@ export const FIELD_REGISTRY = {
       ],
     },
     mh_selected_psychiatrist_details: {
+      question: "Date(s) and hospital/clinic",
       label: "Selected Condition: Psychiatrist Care Details",
       kind: "string",
       risk: "none",
       when: [{ section: "mentalHealth", field: "mh_selected_psychiatrist_5y", equals: true }],
     },
     mh_selected_inpatient_5y: {
+      question: "Past 5 years: in-patient at a hospital or clinic?",
       label: "Selected Condition: Inpatient Care in Past 5 Yr",
       kind: "boolean",
       risk: "true",
@@ -743,12 +880,14 @@ export const FIELD_REGISTRY = {
       ],
     },
     mh_selected_inpatient_details: {
+      question: "Date(s) and hospital/clinic",
       label: "Selected Condition: Inpatient Care Details",
       kind: "string",
       risk: "none",
       when: [{ section: "mentalHealth", field: "mh_selected_inpatient_5y", equals: true }],
     },
     mh_selected_unable_work_5y: {
+      question: "Past 5 years: unable to work due to your condition?",
       label: "Selected Condition: Unable to Work in Past 5 Yr",
       kind: "boolean",
       risk: "true",
@@ -759,12 +898,14 @@ export const FIELD_REGISTRY = {
       ],
     },
     mh_selected_unable_work_details: {
+      question: "Date and duration of each absence",
       label: "Selected Condition: Work Disability Details",
       kind: "string",
       risk: "none",
       when: [{ section: "mentalHealth", field: "mh_selected_unable_work_5y", equals: true }],
     },
     mh_selected_suicidal_thoughts: {
+      question: "Have you had any suicidal thoughts?",
       label: "Selected Condition: Suicidal Thoughts",
       kind: "boolean",
       risk: "true",
@@ -775,6 +916,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     mh_selected_suicide_attempt: {
+      question: "Have you attempted suicide?",
       label: "Selected Condition: Suicide Attempt",
       kind: "boolean",
       risk: "true",
@@ -785,12 +927,14 @@ export const FIELD_REGISTRY = {
       ],
     },
     mh_selected_suicide_attempt_details: {
+      question: "Full details, including date and follow-up treatment",
       label: "Selected Condition: Suicide Attempt Details",
       kind: "string",
       risk: "none",
       when: [{ section: "mentalHealth", field: "mh_selected_suicide_attempt", equals: true }],
     },
     mh_selected_disability: {
+      question: "Have you ever been on disability?",
       label: "Selected Condition: Disability",
       kind: "boolean",
       risk: "true",
@@ -801,6 +945,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     mh_selected_disability_details: {
+      question: "Provide details",
       label: "Selected Condition: Disability Details",
       kind: "string",
       risk: "none",
@@ -808,23 +953,35 @@ export const FIELD_REGISTRY = {
     },
   },
   nicotineSmoking: {
-    nic_ever_used: { label: "Ever Used Tobacco or Nicotine", kind: "boolean", risk: "true" },
+    nic_ever_used: {
+      question: "Have you ever used tobacco or nicotine products in any form?",
+      label: "Ever Used Tobacco or Nicotine",
+      kind: "boolean",
+      risk: "true",
+    },
     nic_used_12_3_5y: {
+      question:
+        "Has the proposed insured used nicotine, tobacco, vape, or e-cigarettes within the past 12 months, 3 years, or 5 years? (excluding occasional cigar or pipe use)",
       label: "Tobacco / Nicotine Use in Stated 12-Month, 3-Year, or 5-Year Period",
       kind: "boolean",
       risk: "true",
     },
     nic_used_36m: {
+      question:
+        "During the past 36 months, have you used tobacco or nicotine products in any form (excluding occasional cigar or pipe use)?",
       label: "Tobacco / Nicotine Use in Past 36 Months",
       kind: "boolean",
       risk: "true",
     },
     nic_used_12m: {
+      question:
+        "Have you used tobacco or any nicotine products in any form within the past twelve (12) months?",
       label: "Tobacco / Nicotine Use in Past 12 Months",
       kind: "boolean",
       risk: "true",
     },
     nic_products: {
+      question: "Products used",
       label: "Tobacco / Nicotine Products Used",
       kind: "array",
       risk: "present",
@@ -836,12 +993,14 @@ export const FIELD_REGISTRY = {
       ],
     },
     nic_type_and_amount: {
+      question: "Type and amount",
       label: "Tobacco / Nicotine Type and Amount",
       kind: "string",
       risk: "none",
       when: [{ section: "nicotineSmoking", field: "nic_used_12m", equals: true }],
     },
     nic_date_last_used: {
+      question: "Date last used",
       label: "Tobacco / Nicotine Last Use Date",
       kind: "string",
       risk: "none",
@@ -850,19 +1009,41 @@ export const FIELD_REGISTRY = {
   },
   alcoholUse: {
     alc_past7_abuse_counseling: {
+      question:
+        "Within the past 7 years, have you abused alcohol, or had or been recommended treatment/counseling, or been advised to discontinue alcohol?",
       label: "Past 7 Yr: Alcohol Abuse or Counseling",
       kind: "boolean",
       risk: "true",
     },
     alc_past5_abuse_counseling: {
+      question:
+        "Within the past 5 years, have you abused alcohol or drugs, or been recommended to discontinue alcohol or have treatment/counseling?",
       label: "Past 5 Yr: Alcohol Abuse or Counseling",
       kind: "boolean",
       risk: "true",
     },
-    alc_past10_treated: { label: "Past 10 Yr: Alcohol Treatment", kind: "boolean", risk: "true" },
-    alc_history: { label: "Alcohol Abuse History", kind: "boolean", risk: "true" },
-    alc_infractions: { label: "Alcohol-Related Infractions", kind: "boolean", risk: "true" },
+    alc_past10_treated: {
+      question: "In the past 10 years, have you been treated for alcohol abuse?",
+      label: "Past 10 Yr: Alcohol Treatment",
+      kind: "boolean",
+      risk: "true",
+    },
+    alc_history: {
+      question:
+        "Any history of alcohol abuse, misuse, treatment, counseling, or being advised to discontinue alcohol?",
+      label: "Alcohol Abuse History",
+      kind: "boolean",
+      risk: "true",
+    },
+    alc_infractions: {
+      question:
+        "Any alcohol/drug related infractions (including excessive use, or admitted DWI/DUI within the last three years)?",
+      label: "Alcohol-Related Infractions",
+      kind: "boolean",
+      risk: "true",
+    },
     alc_details: {
+      question: "If you answered Yes to any question, provide dates, treatment, and details",
       label: "Alcohol Dates, Treatment, and Details",
       kind: "string",
       risk: "none",
@@ -877,27 +1058,33 @@ export const FIELD_REGISTRY = {
   },
   riskyBehavior: {
     avi_flights_past12m: {
+      question: "Flights as pilot, student pilot, or crew in the past 12 months?",
       label: "Pilot / Crew Flights in Past 12 Months",
       kind: "boolean",
       risk: "true",
     },
     avi_flights_past24m: {
+      question:
+        "Flights made or contemplated as pilot, student pilot, or crew in the past 24 months?",
       label: "Pilot / Crew Flights in Past 24 Months",
       kind: "boolean",
       risk: "true",
     },
     avi_future_2y: {
+      question: "Do you expect to fly in the next two years?",
       label: "Planned Pilot / Crew Flying in Next 2 Years",
       kind: "boolean",
       risk: "true",
     },
     avi_future_details: {
+      question: "Future flying: aircraft, purpose, locations, and frequency",
       label: "Planned Aviation Details",
       kind: "string",
       risk: "none",
       when: [{ section: "riskyBehavior", field: "avi_future_2y", equals: true }],
     },
     avi_license_type: {
+      question: "Certificate / license",
       label: "Aviation Certificate / License Type",
       kind: "string",
       risk: "none",
@@ -908,6 +1095,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     avi_accident_grounded_fined: {
+      question: "Aircraft accident, grounded, fined, or reprimanded?",
       label: "Aviation Accident, Grounding, or Fine",
       kind: "boolean",
       risk: "true",
@@ -918,12 +1106,14 @@ export const FIELD_REGISTRY = {
       ],
     },
     avi_accident_details: {
+      question: "Incident dates and details",
       label: "Aviation Accident, Grounding, or Fine Details",
       kind: "string",
       risk: "none",
       when: [{ section: "riskyBehavior", field: "avi_accident_grounded_fined", equals: true }],
     },
     avi_hours_pilot: {
+      question: "Total pilot hours",
       label: "Pilot Flight Hours",
       kind: "number",
       risk: "none",
@@ -934,6 +1124,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     avi_hours_crew: {
+      question: "Total crew hours",
       label: "Crew Flight Hours",
       kind: "number",
       risk: "none",
@@ -944,6 +1135,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     avi_schedule_flying_time: {
+      question: "Schedule of flying time by category",
       label: "Flying Schedule and Time",
       kind: "string",
       risk: "none",
@@ -954,6 +1146,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     avi_other_flying_details: {
+      question: "Other types of flying and aircraft flown",
       label: "Other Aviation Details",
       kind: "string",
       risk: "none",
@@ -963,8 +1156,14 @@ export const FIELD_REGISTRY = {
         { section: "riskyBehavior", field: "avi_future_2y", equals: true },
       ],
     },
-    adv_participation: { label: "Hazardous Sports / Activities", kind: "array", risk: "present" },
+    adv_participation: {
+      question: "Select all activities that apply (leave empty if none)",
+      label: "Hazardous Sports / Activities",
+      kind: "array",
+      risk: "present",
+    },
     climb_years: {
+      question: "Years climbing and frequency",
       label: "Years of Rock / Mountain Climbing",
       kind: "string",
       risk: "none",
@@ -977,6 +1176,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     climb_regions: {
+      question: "Locations / regions",
       label: "Climbing Regions",
       kind: "string",
       risk: "none",
@@ -989,6 +1189,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     climb_nature: {
+      question: "Terrain, difficulty, height, and seasons",
       label: "Nature of Climbing",
       kind: "string",
       risk: "none",
@@ -1001,6 +1202,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     climb_bolts: {
+      question: "Proportion on bolt-protected routes",
       label: "Climbing Bolts / Protection",
       kind: "string",
       risk: "none",
@@ -1013,6 +1215,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     climb_no_rope: {
+      question: "Solo climbing or climbing without rope",
       label: "Climbing Without a Rope",
       kind: "string",
       risk: "none",
@@ -1024,8 +1227,14 @@ export const FIELD_REGISTRY = {
         },
       ],
     },
-    race_intent: { label: "Planned Racing Types", kind: "array", risk: "present" },
+    race_intent: {
+      question: "Automobile or hydroplane racing (leave empty if none)",
+      label: "Planned Racing Types",
+      kind: "array",
+      risk: "present",
+    },
     race_track: {
+      question: "Track type",
       label: "Racing Track / Course",
       kind: "string",
       risk: "none",
@@ -1040,6 +1249,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     race_professional: {
+      question: "Professional racing or racing for cash prizes?",
       label: "Professional Racing",
       kind: "boolean",
       risk: "true",
@@ -1054,6 +1264,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     race_last_date: {
+      question: "Date of last race",
       label: "Most Recent Race",
       kind: "string",
       risk: "none",
@@ -1068,6 +1279,8 @@ export const FIELD_REGISTRY = {
       ],
     },
     dive_certified: {
+      question: "Certified skin / scuba diver?",
+      flagExplanation: "Applicant is not a certified skin / scuba diver",
       label: "Diving Certification",
       kind: "boolean",
       risk: "false",
@@ -1078,24 +1291,28 @@ export const FIELD_REGISTRY = {
       flagLabel: "Diving Certification",
     },
     dive_instruction_hours: {
+      question: "Hours of instruction",
       label: "Diving Instruction Hours",
       kind: "number",
       risk: "none",
       when: [{ section: "riskyBehavior", field: "dive_certified", equals: true }],
     },
     dive_certification_date: {
+      question: "Certification date",
       label: "Diving Certification Date",
       kind: "string",
       risk: "none",
       when: [{ section: "riskyBehavior", field: "dive_certified", equals: true }],
     },
     dive_not_certified_reason: {
+      question: "Reason not certified",
       label: "Reason Not Certified for Diving",
       kind: "string",
       risk: "none",
       when: [{ section: "riskyBehavior", field: "dive_certified", equals: false }],
     },
     dive_max_depth: {
+      question: "Maximum depth (include units)",
       label: "Maximum Diving Depth",
       kind: "string",
       risk: "none",
@@ -1105,6 +1322,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     dive_schedule: {
+      question: "Number of dives and average time underwater by depth",
       label: "Diving Schedule",
       kind: "string",
       risk: "none",
@@ -1114,6 +1332,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     dive_equipment: {
+      question: "Equipment used",
       label: "Diving Equipment",
       kind: "string",
       risk: "none",
@@ -1123,6 +1342,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     dive_locations: {
+      question: "Diving locations",
       label: "Diving Locations",
       kind: "array",
       risk: "none",
@@ -1132,6 +1352,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     dive_salvage_exploration: {
+      question: "Salvage / exploration diving?",
       label: "Diving for Salvage / Exploration",
       kind: "boolean",
       risk: "true",
@@ -1141,6 +1362,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     dive_club_member: {
+      question: "Organized diving club membership?",
       label: "Diving Club Membership",
       kind: "boolean",
       risk: "none",
@@ -1152,38 +1374,53 @@ export const FIELD_REGISTRY = {
   },
   drivingRecord: {
     drv_valid_license: {
+      question: "Do you currently have a valid driver’s license?",
+      flagExplanation: "Applicant does not hold a valid driver's license",
       label: "Holds a Valid Driver's License",
       kind: "boolean",
       risk: "false",
       flagLabel: "Does NOT hold a valid driver's license",
     },
     drv_suspension_24m: {
+      question: "Within the past 24 months, license suspended/revoked or convicted of DUI?",
       label: "Past 24 Mo: License Suspension / Revocation or DUI",
       kind: "boolean",
       risk: "true",
     },
     drv_suspension_5y: {
+      question:
+        "Within the past 5 years, license suspended/revoked, or currently suspended/revoked?",
       label: "Past 5 Yr: License Suspension / Revocation",
       kind: "boolean",
       risk: "true",
     },
     drv_moving_violations_5y: {
+      question: "Within the past 5 years, pled guilty to or convicted of any moving violations?",
       label: "Past 5 Yr: Moving Violations",
       kind: "boolean",
       risk: "true",
     },
     drv_careless_reckless_5y: {
+      question: "Within the past 5 years, convicted of careless or reckless driving?",
       label: "Past 5 Yr: Careless / Reckless Driving Conviction",
       kind: "boolean",
       risk: "true",
     },
     drv_more_than_two_violations: {
+      question:
+        "In the past 5 years, more than two moving violations or any alcohol/drug infractions?",
       label: "Past 5 Yr: More Than Two Moving Violations or Alcohol / Drug Infractions",
       kind: "boolean",
       risk: "true",
     },
-    drv_accidents: { label: "Motor Vehicle Accident History", kind: "boolean", risk: "true" },
+    drv_accidents: {
+      question: "Have you ever had any motor vehicle accidents?",
+      label: "Motor Vehicle Accident History",
+      kind: "boolean",
+      risk: "true",
+    },
     drv_details: {
+      question: "If Yes to any violation/accident question, provide dates, fault, and details",
       label: "Driving Dates, Fault, and Details",
       kind: "string",
       risk: "none",
@@ -1199,41 +1436,56 @@ export const FIELD_REGISTRY = {
   },
   criminalRecord: {
     crim_past6m_supervision: {
+      question:
+        "Within the past 6 months, served or been released from incarceration, probation, parole, or court-ordered supervision?",
       label: "Past 6 Mo: Incarceration, Probation, Parole, or Court Supervision",
       kind: "boolean",
       risk: "true",
     },
     crim_felony_7y: {
+      question:
+        "Within the past 7 years, convicted of, pleaded guilty, or no contest to any felony?",
       label: "Past 7 Yr: Felony Conviction or Plea",
       kind: "boolean",
       risk: "true",
     },
     crim_felony_10y: {
+      question:
+        "In the past 10 years, convicted of, pled guilty to, or awaiting trial for a felony?",
       label: "Past 10 Yr: Felony Conviction, Plea, or Pending Trial",
       kind: "boolean",
       risk: "true",
     },
     crim_supervision_10y: {
+      question:
+        "In the past 10 years, served or been released from incarceration, probation, parole, or supervision?",
       label: "Past 10 Yr: Incarceration, Probation, Parole, or Supervision",
       kind: "boolean",
       risk: "true",
     },
     crim_current_supervision: {
+      question: "Currently under probation, parole, or other court-ordered supervision?",
       label: "Current Probation, Parole, or Court Supervision",
       kind: "boolean",
       risk: "true",
     },
     crim_past5y_guilty_convicted: {
+      question:
+        "Within the past 5 years, pled guilty/convicted of a felony or misdemeanor (incl. DUI/DWI) or charge pending?",
       label: "Past 5 Yr: Felony / Misdemeanor Conviction, Plea, or Pending Charge",
       kind: "boolean",
       risk: "true",
     },
     crim_ever_guilty_convicted: {
+      question:
+        "Ever pled guilty to or been convicted of a felony or misdemeanor, or have a charge pending?",
       label: "Any Felony / Misdemeanor Conviction, Plea, or Pending Charge",
       kind: "boolean",
       risk: "true",
     },
     crim_details: {
+      question:
+        "If Yes, provide date of arrest, conviction, and any jail time, probation, or parole",
       label: "Arrest, Conviction, Incarceration, and Supervision Details",
       kind: "string",
       risk: "none",
@@ -1249,20 +1501,29 @@ export const FIELD_REGISTRY = {
     },
   },
   bankruptcy: {
-    bk_has_filed: { label: "Bankruptcy Filing History", kind: "boolean", risk: "true" },
+    bk_has_filed: {
+      question: "Have you or your spouse filed bankruptcy before?",
+      label: "Bankruptcy Filing History",
+      kind: "boolean",
+      risk: "true",
+    },
     bk_type: {
+      question: "What type?",
       label: "Bankruptcy Chapter",
       kind: "string",
       risk: "none",
       when: [{ section: "bankruptcy", field: "bk_has_filed", equals: true }],
     },
     bk_chapter7_personal_or_business: {
+      question: "If Chapter 7, personal or business?",
       label: "Chapter 7: Personal or Business",
       kind: "string",
       risk: "none",
       when: [{ section: "bankruptcy", field: "bk_type", equals: "Chapter 7" }],
     },
     bk_discharged: {
+      question: "Has this bankruptcy been discharged?",
+      flagExplanation: "Bankruptcy has not been discharged",
       label: "Bankruptcy Discharged",
       kind: "boolean",
       risk: "false",
@@ -1270,12 +1531,14 @@ export const FIELD_REGISTRY = {
       flagLabel: "Bankruptcy NOT Discharged",
     },
     bk_discharge_date: {
+      question: "Date (or anticipated date) of discharge",
       label: "Bankruptcy Discharge / Anticipated Discharge Date",
       kind: "string",
       risk: "none",
       when: [{ section: "bankruptcy", field: "bk_has_filed", equals: true }],
     },
     bk_in_process: {
+      question: "Is this bankruptcy still in process?",
       label: "Bankruptcy Currently in Process",
       kind: "boolean",
       risk: "true",
@@ -1284,41 +1547,54 @@ export const FIELD_REGISTRY = {
   },
   illegalDrugUse: {
     drug_past2y: {
+      question:
+        "Within the past 2 years, used illegal drugs, abused alcohol/drugs, or been recommended treatment/counseling or advised to discontinue?",
       label: "Past 2 Yr: Drug Use, Abuse, or Recommended Treatment",
       kind: "boolean",
       risk: "true",
     },
     drug_past5y: {
+      question:
+        "Within the past 5 years, used illegal drugs or abused alcohol/drugs, or been recommended to discontinue or have treatment/counseling?",
       label: "Past 5 Yr: Drug Use, Abuse, or Recommended Treatment",
       kind: "boolean",
       risk: "true",
     },
     drug_ever_listed: {
+      question:
+        "Ever used heroin, morphine, other narcotics, marijuana, cocaine, barbiturates, amphetamines, hallucinogens, or other habit-forming drugs except as prescribed?",
       label: "History of Listed Non-Prescribed or Habit-Forming Drugs",
       kind: "boolean",
       risk: "true",
     },
     drug_past7y_prescription_advice: {
+      question:
+        "Within the past 7 years, advised to have treatment for, or reduce/discontinue, prescription drugs?",
       label: "Past 7 Yr: Advice to Treat, Reduce, or Stop Prescription Drug Use",
       kind: "boolean",
       risk: "true",
     },
     drug_marijuana_24m: {
+      question: "During the last 24 months, smoked marijuana recreationally?",
       label: "Recreational Marijuana Use in Past 24 Months",
       kind: "boolean",
       risk: "true",
     },
     drug_past10y_treated: {
+      question:
+        "In the past 10 years, treated for drug abuse or used any drugs not prescribed to you?",
       label: "Past 10 Yr: Drug Abuse Treatment or Non-Prescribed Drugs",
       kind: "boolean",
       risk: "true",
     },
     drug_current_history: {
+      question: "Any history of or current treatment for drug abuse?",
       label: "Drug Abuse History or Current Treatment",
       kind: "boolean",
       risk: "true",
     },
     drug_details: {
+      question: "If Yes, provide substance, dates, and treatment",
       label: "Substances, Dates, and Treatment Details",
       kind: "string",
       risk: "none",
@@ -1335,46 +1611,57 @@ export const FIELD_REGISTRY = {
   },
   residencyTravel: {
     res_citizen_or_resident: {
+      question: "Is the Proposed Insured a U.S. Citizen or Permanent Resident?",
       label: "Citizenship / Residency Status",
       kind: "string",
       risk: "residency",
     },
     res_non_us_status: {
+      question: "Immigration status or visa type",
       label: "Immigration Status / Visa Type",
       kind: "string",
       risk: "none",
       when: [{ section: "residencyTravel", field: "res_citizen_or_resident", equals: "Other" }],
     },
     res_high_risk_countries_2y: {
+      question:
+        "Within the next 2 years, do you intend to work, travel, or reside in Saudi Arabia, Iraq, Afghanistan, Syria, Somalia, Sudan, or Yemen for more than 30 days, or reside outside the U.S. more than 180 days?",
       label:
         "Next 2 Yr: Intended Extended Work, Travel, or Residence in Listed High-Risk Countries / Outside U.S.",
       kind: "boolean",
       risk: "true",
     },
     res_high_risk_countries_details: {
+      question: "Countries, dates, and purpose",
       label: "High-Risk Countries, Dates, and Purpose",
       kind: "string",
       risk: "none",
       when: [{ section: "residencyTravel", field: "res_high_risk_countries_2y", equals: true }],
     },
     res_travel_outside_us_24m: {
+      question:
+        "Within the next 24 months, do you intend to work, travel, or reside outside the U.S. for more than 30 days?",
       label: "Next 24 Mo: Intended Work, Travel, or Residence Outside U.S. for More Than 30 Days",
       kind: "boolean",
       risk: "true",
     },
     res_travel_outside_us_details: {
+      question: "Where?",
       label: "Travel Outside U.S. Details",
       kind: "string",
       risk: "none",
       when: [{ section: "residencyTravel", field: "res_travel_outside_us_24m", equals: true }],
     },
     res_lived_us_5y: {
+      question: "Has the Proposed Insured lived consistently in the USA for the past 5 years?",
+      flagExplanation: "Applicant has not lived consistently in the U.S. for the past 5 years",
       label: "Lived in U.S. for Past 5 Years",
       kind: "boolean",
       risk: "false",
       flagLabel: "Has NOT lived in the U.S. for the past 5 years",
     },
     res_move_back_native_country: {
+      question: "Does the Proposed Insured plan to move back to their native country?",
       label: "Plans to Move Back to Native Country",
       kind: "boolean",
       risk: "true",
@@ -1382,6 +1669,8 @@ export const FIELD_REGISTRY = {
     // Explicit user requirement: annotate populated general travel text when both future toggles are No.
     // It may legitimately describe history, so show a context note and never infer a contradiction or add a risk flag.
     res_foreign_travel_details: {
+      question:
+        "Previous and future foreign travel/residence (dates, countries, regions, reason, frequency, duration) — last 2 years",
       label: "Foreign Travel / Residency Details",
       kind: "string",
       risk: "none",
@@ -1392,17 +1681,41 @@ export const FIELD_REGISTRY = {
     },
   },
   occupationFinancial: {
-    occ_current_occupation: { label: "Current Occupation", kind: "string", risk: "none" },
-    occ_annual_salary: { label: "Annual Salary", kind: "number", risk: "none" },
+    occ_current_occupation: {
+      question: "Current occupation",
+      label: "Current Occupation",
+      kind: "string",
+      risk: "none",
+    },
+    occ_annual_salary: {
+      question: "Annual salary (USD)",
+      label: "Annual Salary",
+      kind: "number",
+      risk: "none",
+    },
     occ_full_time_6mo: {
+      question: "Working full-time (30+ hours/week) for the past six months?",
+      flagExplanation: "Applicant has not worked full-time for the past 6 months",
       label: "Worked Full-Time for Past 6 Months",
       kind: "boolean",
       risk: "false",
       flagLabel: "Has NOT worked full-time for the past 6 months",
     },
-    occ_weapon: { label: "Carries a Weapon at Work", kind: "boolean", risk: "true" },
-    occ_high_risk_occupation: { label: "High-Risk Occupation", kind: "boolean", risk: "true" },
+    occ_weapon: {
+      question: "Do you carry a weapon in your occupation?",
+      label: "Carries a Weapon at Work",
+      kind: "boolean",
+      risk: "true",
+    },
+    occ_high_risk_occupation: {
+      question:
+        "Member of a high-risk occupation (blaster/explosives, iron/structural worker, underground miner, professional athlete, casino worker, firefighter, etc.)?",
+      label: "High-Risk Occupation",
+      kind: "boolean",
+      risk: "true",
+    },
     occ_high_risk_details: {
+      question: "Provide details",
       label: "High-Risk Occupation Details",
       kind: "string",
       risk: "none",
@@ -1410,32 +1723,43 @@ export const FIELD_REGISTRY = {
     },
   },
   militaryService: {
-    mil_active_duty: { label: "Active Military Duty", kind: "boolean", risk: "true" },
+    mil_active_duty: {
+      question: "Are you a member of the United States Military on active duty?",
+      label: "Active Military Duty",
+      kind: "boolean",
+      risk: "true",
+    },
     mil_deployment: {
+      question:
+        "Currently deployed or have orders to deploy to Saudi Arabia, Iraq, Afghanistan, Syria, Somalia, Sudan, or Yemen?",
       label: "Military Deployment",
       kind: "boolean",
       risk: "true",
       when: [{ section: "militaryService", field: "mil_active_duty", equals: true }],
     },
     mil_flying_time: {
+      question: "Complete schedule of flying time (military aviation)",
       label: "Military Flying Time",
       kind: "string",
       risk: "none",
       when: [{ section: "militaryService", field: "mil_active_duty", equals: true }],
     },
     mil_flight_type: {
+      question: "Type of flying",
       label: "Military Flight Types",
       kind: "array",
       risk: "none",
       when: [{ section: "militaryService", field: "mil_active_duty", equals: true }],
     },
     mil_job_rank: {
+      question: "Job title and current rank",
       label: "Military Job Title and Rank",
       kind: "string",
       risk: "none",
       when: [{ section: "militaryService", field: "mil_active_duty", equals: true }],
     },
     mil_aircraft_duties: {
+      question: "Are you assigned duties aboard the aircraft?",
       label: "Military Aircraft Duties",
       kind: "boolean",
       risk: "true",
@@ -1443,108 +1767,274 @@ export const FIELD_REGISTRY = {
     },
   },
   optionalContact: {
-    contact_name: { label: "Contact Name", kind: "string", risk: "none" },
-    contact_email: { label: "Contact Email", kind: "string", risk: "none" },
-    contact_phone: { label: "Contact Phone", kind: "string", risk: "none" },
-    contact_preferred_time: { label: "Preferred Contact Time", kind: "string", risk: "none" },
+    contact_name: {
+      question: "Name",
+      label: "Contact Name",
+      kind: "string",
+      risk: "none",
+    },
+    contact_email: {
+      question: "Email address",
+      label: "Contact Email",
+      kind: "string",
+      risk: "none",
+    },
+    contact_phone: {
+      question: "Cell phone number",
+      label: "Contact Phone",
+      kind: "string",
+      risk: "none",
+    },
+    contact_preferred_time: {
+      question: "Preferred time for me to reach out",
+      label: "Preferred Contact Time",
+      kind: "string",
+      risk: "none",
+    },
   },
   consents: {
-    consent_contact: { label: "Contact Consent", kind: "boolean", risk: "false" },
+    consent_contact: {
+      question: "Consent to Contact",
+      flagExplanation: "Contact consent has not been granted",
+      label: "Contact Consent",
+      kind: "boolean",
+      risk: "false",
+    },
     consent_disclaimer: {
+      question: "Acknowledgment & Consent",
+      flagExplanation: "Disclaimer acknowledgment has not been granted",
       label: "Practice Worksheet Disclaimer Acknowledgment",
       kind: "boolean",
       risk: "false",
     },
   },
   seizureModule: {
-    seizure_diagnosis: { label: "Seizure Diagnosis", kind: "string", risk: "none" },
-    seizure_diagnosis_date: { label: "Seizure Diagnosis Date", kind: "string", risk: "none" },
-    seizure_age_at_onset: { label: "Age at Seizure Onset", kind: "number", risk: "none" },
-    seizure_total_count: { label: "Total Seizure Count", kind: "number", risk: "none" },
-    seizure_most_recent_date: { label: "Most Recent Seizure", kind: "string", risk: "none" },
-    seizure_frequency: { label: "Seizure Frequency", kind: "string", risk: "none" },
-    seizure_treatments: { label: "Seizure Treatments", kind: "string", risk: "none" },
+    seizure_diagnosis: {
+      question:
+        "Exact official diagnosis (epilepsy, tonic-clonic, absence, partial, single event…)",
+      label: "Seizure Diagnosis",
+      kind: "string",
+      risk: "none",
+    },
+    seizure_diagnosis_date: {
+      question: "Exact date of diagnosis",
+      label: "Seizure Diagnosis Date",
+      kind: "string",
+      risk: "none",
+    },
+    seizure_age_at_onset: {
+      question: "Age at onset",
+      label: "Age at Seizure Onset",
+      kind: "number",
+      risk: "none",
+    },
+    seizure_total_count: {
+      question: "Total seizures/episodes",
+      label: "Total Seizure Count",
+      kind: "number",
+      risk: "none",
+    },
+    seizure_most_recent_date: {
+      question: "Date of most recent seizure",
+      label: "Most Recent Seizure",
+      kind: "string",
+      risk: "none",
+    },
+    seizure_frequency: {
+      question: "Frequency (daily, monthly, yearly, seizure-free duration)",
+      label: "Seizure Frequency",
+      kind: "string",
+      risk: "none",
+    },
+    seizure_treatments: {
+      question: "Past and current treatments or therapies",
+      label: "Seizure Treatments",
+      kind: "string",
+      risk: "none",
+    },
     seizure_medications: {
+      question:
+        "Anticonvulsant medications (leave empty if none; otherwise include name, dosage, start date, adherence)",
       label: "Seizure Medications",
       kind: "detailedMedications",
       risk: "none",
     },
-    seizure_physician_name: { label: "Seizure Treating Physician", kind: "string", risk: "none" },
-    seizure_physician_address: { label: "Seizure Physician Address", kind: "string", risk: "none" },
-    seizure_physician_phone: { label: "Seizure Physician Phone", kind: "string", risk: "none" },
-    seizure_last_visit: { label: "Last Seizure-Related Visit", kind: "string", risk: "none" },
+    seizure_physician_name: {
+      question: "Treating neurologist/physician name",
+      label: "Seizure Treating Physician",
+      kind: "string",
+      risk: "none",
+    },
+    seizure_physician_address: {
+      question: "Physician address",
+      label: "Seizure Physician Address",
+      kind: "string",
+      risk: "none",
+    },
+    seizure_physician_phone: {
+      question: "Physician phone",
+      label: "Seizure Physician Phone",
+      kind: "string",
+      risk: "none",
+    },
+    seizure_last_visit: {
+      question: "Date of last visit",
+      label: "Last Seizure-Related Visit",
+      kind: "string",
+      risk: "none",
+    },
     seizure_last_visit_reason_result: {
+      question: "Reason/result of last visit and monitoring frequency",
       label: "Seizure Visit Reason and Result",
       kind: "string",
       risk: "none",
     },
-    seizure_hospital_visits: { label: "Seizure Hospital Visits", kind: "string", risk: "none" },
-    seizure_pending_tests: { label: "Pending Seizure Tests", kind: "string", risk: "none" },
+    seizure_hospital_visits: {
+      question: "Hospital/ER/urgent care visits due to seizures (dates, outcomes)",
+      label: "Seizure Hospital Visits",
+      kind: "string",
+      risk: "none",
+    },
+    seizure_pending_tests: {
+      question: "Advised tests (EEG, MRI, CT) not completed, pending, or abnormal",
+      label: "Pending Seizure Tests",
+      kind: "string",
+      risk: "none",
+    },
     seizure_classification_simple_partial_check: {
+      question:
+        "If simple/complex partial or absence: no seizures for 2+ years and no loss of consciousness?",
+      flagExplanation: "Applicant does not meet the stated partial / absence seizure-control check",
       label: "Partial / Absence: Seizure-Free for 2+ Years Without Loss of Consciousness",
       kind: "boolean",
       risk: "false",
       flagLabel: "Does NOT Meet the Stated Partial / Absence Seizure-Control Check",
     },
     seizure_classification_epilepsy_control: {
+      question: "If epilepsy/tonic-clonic: how long seizure-free and controlled on medication?",
       label: "Epilepsy Classification and Control",
       kind: "string",
       risk: "none",
     },
-    seizure_polytherapy: { label: "Multiple Seizure Medications", kind: "boolean", risk: "true" },
-    seizure_underlying_cause: { label: "Underlying Seizure Cause", kind: "string", risk: "none" },
+    seizure_polytherapy: {
+      question: "Do you require multiple anti-seizure drugs (polytherapy)?",
+      label: "Multiple Seizure Medications",
+      kind: "boolean",
+      risk: "true",
+    },
+    seizure_underlying_cause: {
+      question: "Underlying cause (head trauma, tumor, infection, stroke, withdrawal…)",
+      label: "Underlying Seizure Cause",
+      kind: "string",
+      risk: "none",
+    },
     seizure_injuries_accidents: {
+      question: "Injuries, burns, or accidents resulting from a seizure",
       label: "Seizure Injuries / Accidents",
       kind: "string",
       risk: "none",
     },
     seizure_driving_status: {
+      question: "License suspended/revoked/restricted? Currently permitted to drive?",
       label: "Seizure-Related Driving Status",
       kind: "string",
       risk: "none",
     },
     seizure_functional_limitations: {
+      question: "Limits on full-time work, machinery, or daily activities",
       label: "Seizure Functional Limitations",
       kind: "string",
       risk: "none",
     },
-    seizure_assistance_needed: { label: "Seizure Assistance Needed", kind: "string", risk: "none" },
+    seizure_assistance_needed: {
+      question: "Need assistance or assistive devices for daily activities",
+      label: "Seizure Assistance Needed",
+      kind: "string",
+      risk: "none",
+    },
   },
   respiratoryModule: {
-    resp_diagnosis: { label: "Respiratory Diagnosis", kind: "string", risk: "none" },
+    resp_diagnosis: {
+      question: "Exact official diagnosis",
+      label: "Respiratory Diagnosis",
+      kind: "string",
+      risk: "none",
+    },
     resp_date_first_diagnosed: {
+      question: "Date first diagnosed",
       label: "First Respiratory Diagnosis Date",
       kind: "string",
       risk: "none",
     },
-    resp_age_at_onset: { label: "Age at Respiratory Onset", kind: "number", risk: "none" },
+    resp_age_at_onset: {
+      question: "Age at onset",
+      label: "Age at Respiratory Onset",
+      kind: "number",
+      risk: "none",
+    },
     resp_symptoms_frequency: {
+      question: "Symptoms, frequency, and most recent flare-up",
       label: "Respiratory Symptoms and Frequency",
       kind: "string",
       risk: "none",
     },
-    resp_treatments: { label: "Respiratory Treatments", kind: "string", risk: "none" },
+    resp_treatments: {
+      question: "Past and current treatments / management plan",
+      label: "Respiratory Treatments",
+      kind: "string",
+      risk: "none",
+    },
     resp_medications: {
+      question: "Medications (inhalers, bronchodilators, steroids…)",
       label: "Respiratory Medications",
       kind: "detailedMedications",
       risk: "none",
     },
-    resp_physician_name: { label: "Respiratory Treating Physician", kind: "string", risk: "none" },
+    resp_physician_name: {
+      question: "Treating physician / pulmonologist / sleep specialist",
+      label: "Respiratory Treating Physician",
+      kind: "string",
+      risk: "none",
+    },
     resp_physician_address: {
+      question: "Physician address",
       label: "Respiratory Physician Address",
       kind: "string",
       risk: "none",
     },
-    resp_physician_phone: { label: "Respiratory Physician Phone", kind: "string", risk: "none" },
-    resp_last_visit: { label: "Last Respiratory Visit", kind: "string", risk: "none" },
+    resp_physician_phone: {
+      question: "Physician phone",
+      label: "Respiratory Physician Phone",
+      kind: "string",
+      risk: "none",
+    },
+    resp_last_visit: {
+      question: "Date of last visit",
+      label: "Last Respiratory Visit",
+      kind: "string",
+      risk: "none",
+    },
     resp_last_visit_reason_result: {
+      question: "Reason/result of last visit and monitoring frequency",
       label: "Respiratory Visit Reason and Result",
       kind: "string",
       risk: "none",
     },
-    resp_hospital_visits: { label: "Respiratory Hospital Visits", kind: "string", risk: "none" },
-    resp_pending_tests: { label: "Pending Respiratory Tests", kind: "string", risk: "none" },
+    resp_hospital_visits: {
+      question: "Hospital/ER/urgent care visits (dates, outcomes)",
+      label: "Respiratory Hospital Visits",
+      kind: "string",
+      risk: "none",
+    },
+    resp_pending_tests: {
+      question: "Pending/abnormal tests or evaluations",
+      label: "Pending Respiratory Tests",
+      kind: "string",
+      risk: "none",
+    },
     copd_history: {
+      question:
+        "History of emphysema, chronic bronchitis, bronchiectasis, other chronic lung disease",
       label: "COPD / Respiratory History",
       kind: "string",
       risk: "none",
@@ -1561,6 +2051,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     copd_pft_results: {
+      question: "PFT/spirometry results (FEV1, FVC %)",
       label: "Pulmonary Function Test Results",
       kind: "string",
       risk: "none",
@@ -1577,6 +2068,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     copd_sob: {
+      question: "Shortness of breath / dyspnea on exertion?",
       label: "Shortness of Breath",
       kind: "boolean",
       risk: "true",
@@ -1593,6 +2085,9 @@ export const FIELD_REGISTRY = {
       ],
     },
     copd_stairs_tolerance: {
+      question: "Can you climb one flight of stairs with little/no shortness of breath?",
+      flagExplanation:
+        "Applicant cannot climb one flight of stairs with little or no shortness of breath",
       label: "Can Climb One Flight of Stairs with Little / No Shortness of Breath",
       kind: "boolean",
       risk: "false",
@@ -1610,6 +2105,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     copd_oxygen_nebulizer_steroids: {
+      question: "Ever advised to use / currently use oxygen, nebulizer, or steroids?",
       label: "Oxygen, Nebulizer, or Steroid Treatment",
       kind: "boolean",
       risk: "true",
@@ -1626,6 +2122,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     copd_nicotine_history: {
+      question: "Smoking/nicotine history (type, frequency, last used, quit history)",
       label: "COPD Nicotine History",
       kind: "string",
       risk: "none",
@@ -1642,6 +2139,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     copd_other_conditions: {
+      question: "Other respiratory conditions (asthma, fibrosis, cystic fibrosis, chronic cough…)",
       label: "Other COPD-Related Conditions",
       kind: "string",
       risk: "none",
@@ -1658,66 +2156,77 @@ export const FIELD_REGISTRY = {
       ],
     },
     sleep_type: {
+      question: "Type of sleep apnea",
       label: "Sleep Apnea Type",
       kind: "string",
       risk: "none",
       when: [{ section: "healthMedical", field: "conditions_triggered", includes: "Sleep Apnea" }],
     },
     sleep_confirmation_method: {
+      question: "How was the diagnosis confirmed?",
       label: "Sleep Apnea Confirmation Method",
       kind: "string",
       risk: "none",
       when: [{ section: "healthMedical", field: "conditions_triggered", includes: "Sleep Apnea" }],
     },
     sleep_ahi_rdi: {
+      question: "AHI / RDI score",
       label: "Sleep Apnea AHI / RDI",
       kind: "string",
       risk: "none",
       when: [{ section: "healthMedical", field: "conditions_triggered", includes: "Sleep Apnea" }],
     },
     sleep_treatment: {
+      question: "Treatment prescribed",
       label: "Sleep Apnea Treatment",
       kind: "array",
       risk: "none",
       when: [{ section: "healthMedical", field: "conditions_triggered", includes: "Sleep Apnea" }],
     },
     sleep_pap_compliance: {
+      question: "PAP compliance, average nightly hours, adherence data",
       label: "PAP Treatment Adherence",
       kind: "string",
       risk: "none",
       when: [{ section: "healthMedical", field: "conditions_triggered", includes: "Sleep Apnea" }],
     },
     sleep_control_status: {
+      question: "Controlled, or ongoing daytime sleepiness/fatigue/witnessed apneas?",
       label: "Sleep Apnea Control",
       kind: "string",
       risk: "none",
       when: [{ section: "healthMedical", field: "conditions_triggered", includes: "Sleep Apnea" }],
     },
     sleep_repeat_study: {
+      question: "Repeat sleep study results",
       label: "Repeat Sleep Study",
       kind: "string",
       risk: "none",
       when: [{ section: "healthMedical", field: "conditions_triggered", includes: "Sleep Apnea" }],
     },
     sleep_functional_limitations: {
+      question: "Limits on exertion, work, or ADLs",
       label: "Sleep Apnea Functional Limitations",
       kind: "string",
       risk: "none",
       when: [{ section: "healthMedical", field: "conditions_triggered", includes: "Sleep Apnea" }],
     },
     sleep_cardio_complications: {
+      question: "Pulmonary hypertension, cor pulmonale, AFib, high blood pressure…",
       label: "Sleep Apnea Cardiovascular Complications",
       kind: "string",
       risk: "none",
       when: [{ section: "healthMedical", field: "conditions_triggered", includes: "Sleep Apnea" }],
     },
     sleep_comorbidities: {
+      question: "Diabetes, obesity (height/weight), kidney disease, depression, anxiety",
       label: "Sleep Apnea Comorbidities",
       kind: "string",
       risk: "none",
       when: [{ section: "healthMedical", field: "conditions_triggered", includes: "Sleep Apnea" }],
     },
     sleep_driving_restrictions: {
+      question: "Driving/machinery restrictions due to fatigue or impairment",
       label: "Sleep Apnea Driving Restrictions",
       kind: "string",
       risk: "none",
@@ -1726,82 +2235,103 @@ export const FIELD_REGISTRY = {
   },
   cardioNeuroModule: {
     cardio_neuro_diagnosis: {
+      question: "Exact diagnosis",
       label: "Cardiac / Neurologic Diagnosis",
       kind: "string",
       risk: "none",
     },
     cardio_neuro_date: {
+      question: "Date of diagnosis or onset",
       label: "Cardiac / Neurologic Diagnosis Date",
       kind: "string",
       risk: "none",
     },
-    cardio_neuro_age: { label: "Age at Cardiac / Neurologic Onset", kind: "number", risk: "none" },
+    cardio_neuro_age: {
+      question: "Age at event",
+      label: "Age at Cardiac / Neurologic Onset",
+      kind: "number",
+      risk: "none",
+    },
     cardio_neuro_episode_count: {
+      question: "Number of episodes/occurrences",
       label: "Cardiac / Neurologic Episode Count",
       kind: "number",
       risk: "none",
     },
     cardio_neuro_recent_date: {
+      question: "Date of most recent episode",
       label: "Most Recent Cardiac / Neurologic Episode",
       kind: "string",
       risk: "none",
     },
     cardio_neuro_status: {
+      question: "Current status / last symptoms",
       label: "Current Cardiac / Neurologic Status",
       kind: "string",
       risk: "none",
     },
     cardio_neuro_hospitalization: {
+      question: "Hospitalization / ER dates",
       label: "Cardiac / Neurologic Hospitalizations",
       kind: "string",
       risk: "none",
     },
     cardio_neuro_treatments: {
+      question: "Past and current treatments",
       label: "Cardiac / Neurologic Treatments",
       kind: "string",
       risk: "none",
     },
     cardio_neuro_medications: {
+      question: "Medications",
       label: "Cardiac / Neurologic Medications",
       kind: "detailedMedications",
       risk: "none",
     },
     cardio_neuro_blood_thinners: {
+      question: "Currently taking anticoagulant or antiplatelet blood thinners?",
       label: "Blood-Thinner Treatment",
       kind: "boolean",
       risk: "none",
     },
     cardio_neuro_physician_name: {
+      question: "Attending physician / specialist",
       label: "Cardiac / Neurologic Treating Physician",
       kind: "string",
       risk: "none",
     },
     cardio_neuro_physician_address: {
+      question: "Physician address",
       label: "Cardiac / Neurologic Physician Address",
       kind: "string",
       risk: "none",
     },
     cardio_neuro_physician_phone: {
+      question: "Physician phone number",
       label: "Cardiac / Neurologic Physician Phone",
       kind: "string",
       risk: "none",
     },
     cardio_neuro_last_visit: {
+      question: "Date of last visit/check-up",
       label: "Last Cardiac / Neurologic Visit",
       kind: "string",
       risk: "none",
     },
     cardio_neuro_followup_gaps: {
+      question: "Gaps in medical follow-up or noncompliance",
       label: "Cardiac / Neurologic Follow-Up Gaps",
       kind: "string",
       risk: "none",
     },
     cardio_neuro_pending_tests: {
+      question: "Pending or abnormal tests / evaluations / surgeries",
       label: "Pending Cardiac / Neurologic Tests",
       kind: "string",
       risk: "none",
     },
     stroke_root_cause: {
+      question: "Underlying root cause",
       label: "Stroke / TIA Root Cause",
       kind: "string",
       risk: "none",
@@ -1811,6 +2341,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     stroke_imaging_results: {
+      question: "Imaging findings",
       label: "Stroke / TIA Imaging Results",
       kind: "string",
       risk: "none",
@@ -1820,6 +2351,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     stroke_on_anticoagulated: {
+      question: "Did the stroke/TIA occur while adequately anticoagulated?",
       label: "Stroke / TIA Anticoagulant Treatment",
       kind: "boolean",
       risk: "none",
@@ -1829,6 +2361,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     stroke_residual_effects: {
+      question: "Residual effects / deficits / weakness / speech issues",
       label: "Stroke / TIA Residual Effects",
       kind: "string",
       risk: "none",
@@ -1838,6 +2371,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     stroke_cognitive_impairment: {
+      question: "Cognitive impairment / memory loss / impaired reasoning",
       label: "Stroke / TIA Cognitive Impairment",
       kind: "string",
       risk: "none",
@@ -1847,6 +2381,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     stroke_pfo_asd_history: {
+      question: "PFO / ASD history and closure status",
       label: "PFO / ASD History",
       kind: "string",
       risk: "none",
@@ -1856,6 +2391,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     stroke_carotid_ultrasound: {
+      question: "Carotid ultrasound / stenosis / intervention status",
       label: "Carotid Ultrasound Results",
       kind: "string",
       risk: "none",
@@ -1865,6 +2401,7 @@ export const FIELD_REGISTRY = {
       ],
     },
     stroke_therapy_last_3_12_months: {
+      question: "Physical / occupational / speech therapy in the last 3 to 12 months",
       label: "Stroke Therapy in Past 3–12 Months",
       kind: "string",
       risk: "none",
@@ -1874,132 +2411,226 @@ export const FIELD_REGISTRY = {
       ],
     },
     mi_supporting_evidence: {
+      question: "Chest pain / EKG changes / elevated enzymes",
       label: "Heart Attack Supporting Evidence",
       kind: "string",
       risk: "none",
       when: [{ section: "healthMedical", field: "conditions_triggered", includes: "Heart Attack" }],
     },
     mi_procedure_details: {
+      question: "Heart/circulatory surgery or procedure details and date",
       label: "Heart Attack Procedure Details",
       kind: "string",
       risk: "none",
       when: [{ section: "healthMedical", field: "conditions_triggered", includes: "Heart Attack" }],
     },
     mi_vessels_affected: {
+      question: "Number of coronary vessels affected or bypassed",
       label: "Number of Coronary Vessels Affected",
       kind: "number",
       risk: "none",
       when: [{ section: "healthMedical", field: "conditions_triggered", includes: "Heart Attack" }],
     },
     mi_ongoing_symptoms: {
+      question: "Ongoing cardiac symptoms",
       label: "Ongoing Heart Attack Symptoms",
       kind: "string",
       risk: "none",
       when: [{ section: "healthMedical", field: "conditions_triggered", includes: "Heart Attack" }],
     },
     mi_residual_damage: {
+      question: "Residual heart damage / CHF / EF <45%",
       label: "Residual Heart Damage",
       kind: "string",
       risk: "none",
       when: [{ section: "healthMedical", field: "conditions_triggered", includes: "Heart Attack" }],
     },
     mi_recent_workup: {
+      question: "Recent cardiac workup and test results",
       label: "Recent Cardiac Workup",
       kind: "string",
       risk: "none",
       when: [{ section: "healthMedical", field: "conditions_triggered", includes: "Heart Attack" }],
     },
     cardio_limitations: {
+      question: "Limitations on physical or daily activities",
       label: "Cardiovascular Functional Limitations",
       kind: "string",
       risk: "none",
     },
-    cardio_work_status: { label: "Cardiovascular Work Status", kind: "string", risk: "none" },
-    cardio_return_to_work: { label: "Return-to-Work Date", kind: "string", risk: "none" },
+    cardio_work_status: {
+      question: "Work disability / unemployed / restricted from full-time work",
+      label: "Cardiovascular Work Status",
+      kind: "string",
+      risk: "none",
+    },
+    cardio_return_to_work: {
+      question: "Return to work date",
+      label: "Return-to-Work Date",
+      kind: "string",
+      risk: "none",
+    },
     cardio_disability_benefits: {
+      question: "Disability benefits or compensation",
       label: "Cardiovascular Disability Benefits",
       kind: "string",
       risk: "none",
     },
-    cardio_adl_iadl_help: { label: "ADL / IADL Assistance", kind: "string", risk: "none" },
-    cardio_medical_equipment: { label: "Medical Equipment", kind: "string", risk: "none" },
+    cardio_adl_iadl_help: {
+      question: "ADL/IADL assistance or device support",
+      label: "ADL / IADL Assistance",
+      kind: "string",
+      risk: "none",
+    },
+    cardio_medical_equipment: {
+      question: "Medical equipment or mobility devices used in the past 12 months",
+      label: "Medical Equipment",
+      kind: "string",
+      risk: "none",
+    },
     cardio_confinement_status: {
+      question: "Confinement to hospital/nursing home/assisted living/rehab/hospice/home health",
       label: "Medical Confinement Status",
       kind: "string",
       risk: "none",
     },
-    cardio_height_weight: { label: "Height and Weight", kind: "string", risk: "none" },
+    cardio_height_weight: {
+      question: "Current height and weight",
+      label: "Height and Weight",
+      kind: "string",
+      risk: "none",
+    },
     cardio_weight_change_10lbs: {
+      question: "Has there been any weight change of more than 10 pounds in the past year?",
       label: "Weight Change of at Least 10 Pounds",
       kind: "boolean",
       risk: "true",
     },
     cardio_nicotine_history: {
+      question: "Tobacco / nicotine history",
       label: "Cardiovascular Nicotine History",
       kind: "string",
       risk: "none",
     },
-    cardio_bp_history: { label: "Blood Pressure History", kind: "string", risk: "none" },
-    cardio_lipid_panel: { label: "Lipid Panel Results", kind: "string", risk: "none" },
-    cardio_diabetes_history: { label: "Diabetes History", kind: "string", risk: "none" },
+    cardio_bp_history: {
+      question: "Current and historical blood pressure readings and treatment status",
+      label: "Blood Pressure History",
+      kind: "string",
+      risk: "none",
+    },
+    cardio_lipid_panel: {
+      question: "Most recent lipid panel readings",
+      label: "Lipid Panel Results",
+      kind: "string",
+      risk: "none",
+    },
+    cardio_diabetes_history: {
+      question: "Diabetes / pre-diabetes history and complications",
+      label: "Diabetes History",
+      kind: "string",
+      risk: "none",
+    },
     cardio_other_comorbidities: {
+      question: "Other cardiovascular, vascular, or systemic conditions",
       label: "Other Cardiovascular Comorbidities",
       kind: "string",
       risk: "none",
     },
-    cardio_family_history: { label: "Cardiovascular Family History", kind: "string", risk: "none" },
+    cardio_family_history: {
+      question:
+        "Family history of cardiovascular disease, stroke, diabetes, kidney disease, or cancer",
+      label: "Cardiovascular Family History",
+      kind: "string",
+      risk: "none",
+    },
   },
   hypertensionModule: {
-    htn_dx_date: { label: "Hypertension Diagnosis Month", kind: "string", risk: "none" },
+    htn_dx_date: {
+      question: "Date hypertension diagnosed",
+      label: "Hypertension Diagnosis Month",
+      kind: "string",
+      risk: "none",
+    },
     htn_meds_last12months: {
+      question: "Taken BP medication within the last 12 months?",
       label: "Blood Pressure Medication in Past 12 Months",
       kind: "boolean",
       risk: "true",
     },
     htn_current_meds: {
+      question: "Current prescription medications (leave empty if none)",
       label: "Current Blood Pressure Medications",
       kind: "medications",
       risk: "none",
       when: [{ section: "hypertensionModule", field: "htn_meds_last12months", equals: true }],
     },
-    htn_last_doctor_visit: { label: "Last Blood Pressure Visit", kind: "string", risk: "none" },
-    htn_last_bp: { label: "Latest Blood Pressure Reading", kind: "string", risk: "none" },
+    htn_last_doctor_visit: {
+      question: "Date of last doctor visit",
+      label: "Last Blood Pressure Visit",
+      kind: "string",
+      risk: "none",
+    },
+    htn_last_bp: {
+      question: "Last blood pressure reading (e.g., 128/82)",
+      label: "Latest Blood Pressure Reading",
+      kind: "string",
+      risk: "none",
+    },
     htn_bp_normal_or_elevated_if_unknown: {
+      question: "If unknown, reported as normal or elevated?",
       label: "Blood Pressure Control if Reading Unknown",
       kind: "string",
       risk: "none",
     },
-    htn_med_change: { label: "Blood Pressure Medication Change", kind: "boolean", risk: "true" },
+    htn_med_change: {
+      question: "Any change/increase in medication in the last 12 months?",
+      label: "Blood Pressure Medication Change",
+      kind: "boolean",
+      risk: "true",
+    },
     htn_med_change_details: {
+      question: "What was the change?",
       label: "Blood Pressure Medication Change Details",
       kind: "string",
       risk: "none",
       when: [{ section: "hypertensionModule", field: "htn_med_change", equals: true }],
     },
     htn_compliant: {
+      question: "Compliant with medications as directed?",
+      flagExplanation: "Applicant is not following blood pressure medication directions",
       label: "Following Blood Pressure Treatment as Prescribed",
       kind: "boolean",
       risk: "false",
       flagLabel: "NOT Following Blood Pressure Treatment as Prescribed",
     },
-    htn_other_conditions: { label: "Hypertension Other Conditions", kind: "string", risk: "none" },
+    htn_other_conditions: {
+      question:
+        "Other conditions from hypertension in last 2 years (kidney disease, proteinuria, heart/circulatory)",
+      label: "Hypertension Other Conditions",
+      kind: "string",
+      risk: "none",
+    },
     htn_hospitalized_5y: {
+      question: "Hospitalized due to blood pressure in the last 5 years?",
       label: "Past 5 Yr: Hypertension Hospitalization",
       kind: "boolean",
       risk: "true",
     },
     htn_hospitalized_date: {
+      question: "Date of hospitalization",
       label: "Hypertension Hospitalization Date",
       kind: "string",
       risk: "none",
       when: [{ section: "hypertensionModule", field: "htn_hospitalized_5y", equals: true }],
     },
     htn_unable_to_work_5y: {
+      question: "Unable to work due to high blood pressure in the past 5 years?",
       label: "Past 5 Yr: Hypertension Work Disability",
       kind: "boolean",
       risk: "true",
     },
     htn_unable_to_work_details: {
+      question: "Dates and duration of absences",
       label: "Hypertension Work Disability Details",
       kind: "string",
       risk: "none",
@@ -2007,15 +2638,27 @@ export const FIELD_REGISTRY = {
     },
   },
   diabetesModule: {
-    dm_dx_date: { label: "Diabetes Diagnosis Month", kind: "string", risk: "none" },
-    dm_control_method: { label: "Diabetes Control Methods", kind: "array", risk: "none" },
+    dm_dx_date: {
+      question: "Date diabetes diagnosed",
+      label: "Diabetes Diagnosis Month",
+      kind: "string",
+      risk: "none",
+    },
+    dm_control_method: {
+      question: "How is the condition controlled?",
+      label: "Diabetes Control Methods",
+      kind: "array",
+      risk: "none",
+    },
     dm_insulin_start_date: {
+      question: "Date insulin use began",
       label: "Insulin Start Date",
       kind: "string",
       risk: "none",
       when: [{ section: "diabetesModule", field: "dm_control_method", includes: "Insulin" }],
     },
     dm_current_meds: {
+      question: "All current medications (leave empty if none)",
       label: "Current Diabetes Medications",
       kind: "medications",
       risk: "none",
@@ -2024,37 +2667,78 @@ export const FIELD_REGISTRY = {
         { section: "diabetesModule", field: "dm_control_method", includes: "Insulin" },
       ],
     },
-    dm_last_blood_sugar: { label: "Latest Blood Sugar Reading", kind: "string", risk: "none" },
-    dm_last_blood_sugar_date: { label: "Latest Blood Sugar Date", kind: "string", risk: "none" },
-    dm_last_a1c: { label: "Latest A1C Reading", kind: "string", risk: "none" },
-    dm_last_a1c_date: { label: "Latest A1C Date", kind: "string", risk: "none" },
-    dm_reading_unknown: { label: "Diabetes Reading Unknown Details", kind: "string", risk: "none" },
-    dm_med_change: { label: "Diabetes Medication Change", kind: "boolean", risk: "true" },
+    dm_last_blood_sugar: {
+      question: "Last blood sugar reading",
+      label: "Latest Blood Sugar Reading",
+      kind: "string",
+      risk: "none",
+    },
+    dm_last_blood_sugar_date: {
+      question: "Date of that reading",
+      label: "Latest Blood Sugar Date",
+      kind: "string",
+      risk: "none",
+    },
+    dm_last_a1c: {
+      question: "Last A1C reading",
+      label: "Latest A1C Reading",
+      kind: "string",
+      risk: "none",
+    },
+    dm_last_a1c_date: {
+      question: "Date of that A1C",
+      label: "Latest A1C Date",
+      kind: "string",
+      risk: "none",
+    },
+    dm_reading_unknown: {
+      question: "If unknown, reported as elevated or normal?",
+      label: "Diabetes Reading Unknown Details",
+      kind: "string",
+      risk: "none",
+    },
+    dm_med_change: {
+      question: "Medication change/increase in last 12 months?",
+      label: "Diabetes Medication Change",
+      kind: "boolean",
+      risk: "true",
+    },
     dm_med_change_details: {
+      question: "Please explain",
       label: "Diabetes Medication Change Details",
       kind: "string",
       risk: "none",
       when: [{ section: "diabetesModule", field: "dm_med_change", equals: true }],
     },
     dm_compliant: {
+      question: "Compliant with medications as directed?",
+      flagExplanation: "Applicant is not following diabetes medication directions",
       label: "Following Diabetes Treatment as Prescribed",
       kind: "boolean",
       risk: "false",
       flagLabel: "NOT Following Diabetes Treatment as Prescribed",
     },
     dm_noncompliance_details: {
+      question: "Please explain",
       label: "Diabetes Treatment Nonadherence Details",
       kind: "string",
       risk: "none",
       when: [{ section: "diabetesModule", field: "dm_compliant", equals: false }],
     },
-    dm_complications: { label: "Diabetes Complications", kind: "array", risk: "present" },
+    dm_complications: {
+      question: "Ever had or been advised you have:",
+      label: "Diabetes Complications",
+      kind: "array",
+      risk: "present",
+    },
     dm_er_hospital_5y: {
+      question: "Hospitalized or ER visit due to diabetes in the past 5 years?",
       label: "Past 5 Yr: Diabetes ER Visit / Hospitalization",
       kind: "boolean",
       risk: "true",
     },
     dm_er_hospital_details: {
+      question: "Details",
       label: "Diabetes ER / Hospital Details",
       kind: "string",
       risk: "none",
@@ -2062,144 +2746,256 @@ export const FIELD_REGISTRY = {
     },
   },
   arthritisModule: {
-    arth_type: { label: "Arthritis Type", kind: "string", risk: "none" },
-    arth_joints: { label: "Arthritis Affected Joints", kind: "string", risk: "none" },
-    arth_duration: { label: "Arthritis Duration", kind: "string", risk: "none" },
-    arth_last_flare: { label: "Last Arthritis Flare", kind: "string", risk: "none" },
+    arth_type: {
+      question: "Type (osteoarthritis, rheumatoid, other)",
+      label: "Arthritis Type",
+      kind: "string",
+      risk: "none",
+    },
+    arth_joints: {
+      question: "Which joints?",
+      label: "Arthritis Affected Joints",
+      kind: "string",
+      risk: "none",
+    },
+    arth_duration: {
+      question: "How long have you had arthritis?",
+      label: "Arthritis Duration",
+      kind: "string",
+      risk: "none",
+    },
+    arth_last_flare: {
+      question: "Date of last flare-up",
+      label: "Last Arthritis Flare",
+      kind: "string",
+      risk: "none",
+    },
     arth_unable_work_5y: {
+      question: "Unable to work, perform normal activities, or confined at home in past 5 years?",
       label: "Past 5 Yr: Arthritis Work Disability",
       kind: "boolean",
       risk: "true",
     },
     arth_unable_work_details: {
+      question: "Details",
       label: "Arthritis Work Disability Details",
       kind: "string",
       risk: "none",
       when: [{ section: "arthritisModule", field: "arth_unable_work_5y", equals: true }],
     },
-    arth_assistive_devices: { label: "Arthritis Assistive Devices", kind: "string", risk: "none" },
-    arth_symptoms: { label: "Arthritis Symptoms", kind: "string", risk: "none" },
+    arth_assistive_devices: {
+      question: "Need canes, crutches, or a wheelchair?",
+      label: "Arthritis Assistive Devices",
+      kind: "string",
+      risk: "none",
+    },
+    arth_symptoms: {
+      question: "Symptoms (swollen joints, limited motion…)",
+      label: "Arthritis Symptoms",
+      kind: "string",
+      risk: "none",
+    },
     arth_regular_medication: {
+      question: "Regular medication or injections?",
       label: "Regular Arthritis Medication",
       kind: "boolean",
       risk: "true",
     },
     arth_medication_name: {
+      question: "Medication name",
       label: "Arthritis Medication Name",
       kind: "string",
       risk: "none",
       when: [{ section: "arthritisModule", field: "arth_regular_medication", equals: true }],
     },
     arth_medication_dosage: {
+      question: "Dosage",
       label: "Arthritis Medication Dosage",
       kind: "string",
       risk: "none",
       when: [{ section: "arthritisModule", field: "arth_regular_medication", equals: true }],
     },
-    arth_last_doctor_visit: { label: "Last Arthritis Visit", kind: "string", risk: "none" },
+    arth_last_doctor_visit: {
+      question: "Date of last visit with this doctor",
+      label: "Last Arthritis Visit",
+      kind: "string",
+      risk: "none",
+    },
     arth_additional_comments: {
+      question: "Additional comments",
       label: "Additional Arthritis Comments",
       kind: "string",
       risk: "none",
     },
   },
   asthmaModule: {
-    asthma_dx_date: { label: "Asthma Diagnosis Month", kind: "string", risk: "none" },
-    asthma_last_attack: { label: "Last Asthma Attack Month", kind: "string", risk: "none" },
-    asthma_attacks_per_year: { label: "Asthma Attacks per Year", kind: "number", risk: "none" },
-    asthma_triggers: { label: "Asthma Triggers", kind: "string", risk: "none" },
-    asthma_current_meds: { label: "Current Asthma Medications", kind: "medications", risk: "none" },
-    asthma_steroid_use: { label: "Asthma Steroid Use", kind: "boolean", risk: "true" },
+    asthma_dx_date: {
+      question: "When was asthma diagnosed?",
+      label: "Asthma Diagnosis Month",
+      kind: "string",
+      risk: "none",
+    },
+    asthma_last_attack: {
+      question: "Date of last attack",
+      label: "Last Asthma Attack Month",
+      kind: "string",
+      risk: "none",
+    },
+    asthma_attacks_per_year: {
+      question: "Attacks per year",
+      label: "Asthma Attacks per Year",
+      kind: "number",
+      risk: "none",
+    },
+    asthma_triggers: {
+      question: "What precipitates the attacks?",
+      label: "Asthma Triggers",
+      kind: "string",
+      risk: "none",
+    },
+    asthma_current_meds: {
+      question: "Current prescription medications",
+      label: "Current Asthma Medications",
+      kind: "medications",
+      risk: "none",
+    },
+    asthma_steroid_use: {
+      question: "Ever used steroid medication (e.g., Prednisone)?",
+      label: "Asthma Steroid Use",
+      kind: "boolean",
+      risk: "true",
+    },
     asthma_steroid_last_used: {
+      question: "Date last used (and how long)",
       label: "Last Asthma Steroid Use",
       kind: "string",
       risk: "none",
       when: [{ section: "asthmaModule", field: "asthma_steroid_use", equals: true }],
     },
     asthma_hospitalized_5y: {
+      question: "Hospitalized for asthma in past 5 years?",
       label: "Past 5 Yr: Asthma Hospitalization",
       kind: "boolean",
       risk: "true",
     },
-    asthma_er_visits: { label: "Asthma ER Visits", kind: "boolean", risk: "true" },
+    asthma_er_visits: {
+      question: "Seen in the ER for asthma?",
+      label: "Asthma ER Visits",
+      kind: "boolean",
+      risk: "true",
+    },
     asthma_status_asthmaticus: {
+      question: "Ever diagnosed with status asthmaticus?",
       label: "Status Asthmaticus History",
       kind: "boolean",
       risk: "true",
     },
     asthma_status_asthmaticus_date: {
+      question: "Date",
       label: "Status Asthmaticus Month",
       kind: "string",
       risk: "none",
       when: [{ section: "asthmaModule", field: "asthma_status_asthmaticus", equals: true }],
     },
-    asthma_allergy_caused: { label: "Allergy-Triggered Asthma", kind: "boolean", risk: "true" },
+    asthma_allergy_caused: {
+      question: "Described as caused by an allergy?",
+      label: "Allergy-Triggered Asthma",
+      kind: "boolean",
+      risk: "true",
+    },
   },
   cancerModule: {
     cancer_tumor_diagnosed_as_cancer: {
+      question: "Was your tumor diagnosed as cancer?",
       label: "Tumor Diagnosed as Cancer",
       kind: "boolean",
       risk: "true",
     },
-    cancer_dx_date: { label: "Cancer Diagnosis Month", kind: "string", risk: "none" },
+    cancer_dx_date: {
+      question: "When was it diagnosed?",
+      label: "Cancer Diagnosis Month",
+      kind: "string",
+      risk: "none",
+    },
     cancer_location_diagnosis: {
+      question: "Location and diagnosis",
       label: "Cancer Location and Diagnosis",
       kind: "string",
       risk: "none",
     },
     cancer_stage_size_classification: {
+      question: "Stage, size, classification (Dukes, Gleason…) if known",
       label: "Cancer Stage, Size, and Classification",
       kind: "string",
       risk: "none",
     },
     cancer_nodes_spread: {
+      question: "Did it spread to lymph nodes or elsewhere?",
       label: "Cancer Spread to Nodes / Other Sites",
       kind: "boolean",
       risk: "true",
     },
     cancer_nodes_spread_details: {
+      question: "Details",
       label: "Cancer Spread Details",
       kind: "string",
       risk: "none",
       when: [{ section: "cancerModule", field: "cancer_nodes_spread", equals: true }],
     },
-    cancer_surgery_5y: { label: "Past 5 Yr: Cancer Surgery", kind: "boolean", risk: "true" },
+    cancer_surgery_5y: {
+      question: "Surgery to remove the tumor in past 5 years?",
+      label: "Past 5 Yr: Cancer Surgery",
+      kind: "boolean",
+      risk: "true",
+    },
     cancer_surgery_details: {
+      question: "Details",
       label: "Cancer Surgery Details",
       kind: "string",
       risk: "none",
       when: [{ section: "cancerModule", field: "cancer_surgery_5y", equals: true }],
     },
     cancer_chemo_radiation_5y: {
+      question: "Chemotherapy or radiation in past 5 years?",
       label: "Past 5 Yr: Chemotherapy / Radiation",
       kind: "boolean",
       risk: "true",
     },
     cancer_last_treatment_date: {
+      question: "Date of last treatment",
       label: "Last Cancer Treatment Month",
       kind: "string",
       risk: "none",
       when: [{ section: "cancerModule", field: "cancer_chemo_radiation_5y", equals: true }],
     },
     cancer_other_treatments_5y: {
+      question: "Any other treatments in past 5 years?",
       label: "Past 5 Yr: Other Cancer Treatments",
       kind: "boolean",
       risk: "true",
     },
     cancer_other_treatment_details: {
+      question: "Details",
       label: "Other Cancer Treatment Details",
       kind: "string",
       risk: "none",
       when: [{ section: "cancerModule", field: "cancer_other_treatments_5y", equals: true }],
     },
-    cancer_tamoxifen_femara: { label: "Tamoxifen / Femara Use", kind: "boolean", risk: "true" },
+    cancer_tamoxifen_femara: {
+      question: "Used Tamoxifen or Femara?",
+      label: "Tamoxifen / Femara Use",
+      kind: "boolean",
+      risk: "true",
+    },
     cancer_tamoxifen_femara_last_used: {
+      question: "Date last used",
       label: "Last Tamoxifen / Femara Use",
       kind: "string",
       risk: "none",
       when: [{ section: "cancerModule", field: "cancer_tamoxifen_femara", equals: true }],
     },
     cancer_doctor_frequency_last_seen: {
+      question: "How often do you see your doctor, and date last seen",
       label: "Cancer Physician Visit Frequency / Last Seen",
       kind: "string",
       risk: "none",
@@ -2453,8 +3249,16 @@ const OPTIONAL_FIELDS = new Set<string>([
 export const DISCLOSURE =
   "Practice worksheet only — not a formal application; does not bind coverage.";
 export const ORPHAN_BADGE = "[Note: Populated while parent toggle is No]";
+export interface QuestionAnswer {
+  question: string;
+  applicantAnswer: string;
+  underwritingStatus:
+    "CLEAR" | "Not answered" | "Not provided" | `Flag: ${string}` | `Note: ${string}`;
+  /** Individually escaped medication lines for list rendering. */
+  answerItems?: string[];
+}
 /** `flagCount` counts kind=flag only. Inconsistency notes also appear in `flags` for audit. */
-export interface TriggeredFlag {
+export interface TriggeredFlag extends QuestionAnswer {
   kind: "flag" | "note";
   category: Category | "consents" | "other";
   section: string;
@@ -2464,6 +3268,14 @@ export interface TriggeredFlag {
   displayValue: string;
   note?: string;
   explanation?: string;
+}
+interface SummaryAnswer extends QuestionAnswer {
+  category: Category | "consents" | "other";
+  section: string;
+  key: string;
+  value: unknown;
+  flagged: boolean;
+  note?: string;
 }
 export interface FormattedApplicationEmail {
   subject: string;
@@ -2733,14 +3545,82 @@ const textOr = (v: unknown, fallback = "Not Provided") =>
 const styles = {
   page: "margin:0;padding:16px;background:#f1f5f9;color:#172033;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;",
   card: "padding:16px;margin:16px 0;border:1px solid #cbd5e1;border-radius:8px;background:#ffffff;",
-  code: "font-family:Consolas,monospace;font-size:11px;color:#64748b;overflow-wrap:anywhere;word-break:break-word;",
+  table: "width:100%;table-layout:fixed;border-collapse:collapse;",
+  cell: "padding:7px 8px;vertical-align:top;border-bottom:1px solid #e2e8f0;overflow-wrap:anywhere;word-break:break-word;",
+  summaryCell:
+    "padding:3px 8px;vertical-align:top;border-bottom:1px solid #e2e8f0;overflow-wrap:anywhere;word-break:break-word;",
+  heading: "font-size:18px;margin:0 0 10px;break-after:avoid;page-break-after:avoid;",
 };
-function itemHtml(item: TriggeredFlag): string {
-  const raw = JSON.stringify(item.value) ?? "undefined";
-  return `<div style="margin:10px 0;overflow-wrap:anywhere;word-break:break-word;"><strong>${escapeHtml(item.label)}</strong>: ${escapeHtml(item.displayValue).replace(/\n/g, "<br>")}${item.note ? `<br><span style="color:#854d0e;font-size:12px;">${escapeHtml(item.note)}</span>` : ""}${item.explanation ? `<br><span style="color:#475569;font-size:12px;">${escapeHtml(item.explanation)}</span>` : ""}<br><code style="${styles.code}">${escapeHtml(item.key)}: ${escapeHtml(raw)}</code></div>`;
+function medicationAnswers(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((entry) => {
+    const medication = object(entry);
+    const name = textOr(medication.name ?? medication.drugName, "Medication name not provided");
+    const fields = [
+      "dosage",
+      "frequency",
+      "startDate",
+      "adherence",
+      "lastFillDate",
+      "conditionTreated",
+    ] as const;
+    const detail = fields
+      .filter((key) => populated(medication[key]))
+      .map((key) => `${MEDICATION_LABELS[key]}: ${display(medication[key])}`);
+    return `${name}${detail.length ? ` (${detail.join(", ")})` : ""}`;
+  });
+}
+function describeAnswer(
+  section: Section,
+  key: string,
+  value: unknown,
+  rule: FieldRule,
+  risk: boolean,
+  note?: string,
+): QuestionAnswer {
+  const absent = value === undefined || value === null || value === "";
+  const answerItems =
+    rule.kind === "medications" || rule.kind === "detailedMedications"
+      ? medicationAnswers(value)
+      : undefined;
+  const applicantAnswer = absent
+    ? rule.kind === "boolean"
+      ? "Not answered"
+      : "Not provided"
+    : answerItems
+      ? answerItems.join("\n") || "None"
+      : section === "occupationFinancial" && key === "occ_annual_salary"
+        ? formatCurrency(value)
+        : section === "optionalContact" && key === "contact_phone"
+          ? formatPhone(value)
+          : display(value);
+  return {
+    question: rule.question,
+    applicantAnswer,
+    underwritingStatus: risk
+      ? `Flag: ${rule.flagExplanation ?? rule.flagLabel ?? rule.label}`
+      : note
+        ? `Note: ${note.replace(/^\[Note:\s*|\]$/g, "")}`
+        : absent
+          ? rule.kind === "boolean"
+            ? "Not answered"
+            : "Not provided"
+          : "CLEAR",
+    ...(answerItems ? { answerItems } : {}),
+  };
+}
+function answerHtml(item: QuestionAnswer): string {
+  return item.answerItems?.length
+    ? `<ul style="margin:0;padding-left:16px;">${item.answerItems.map((line) => `<li style="margin:0 0 5px;">${escapeHtml(line)}</li>`).join("")}</ul>`
+    : escapeHtml(item.applicantAnswer).replace(/\n/g, "<br>");
+}
+function answerText(item: QuestionAnswer): string {
+  return item.answerItems?.length
+    ? item.answerItems.map((line) => `  • ${line}`).join("\n")
+    : item.applicantAnswer;
 }
 function itemText(item: TriggeredFlag): string {
-  return `- ${item.label}: ${item.displayValue}${item.note ? ` ${item.note}` : ""}${item.explanation ? `\n  ${item.explanation}` : ""}\n  ${item.key}: ${JSON.stringify(item.value) ?? "undefined"}`;
+  return `Question Asked: ${item.question}\nApplicant's Answer: ${answerText(item)}\nUnderwriting Takeaway: ${item.underwritingStatus}${item.explanation ? `\n${item.explanation}` : ""}`;
 }
 /** Pure, dependency-free formatter. The sender must still enforce validation and both consents. */
 export function formatApplicationEmail(
@@ -2757,6 +3637,7 @@ export function formatApplicationEmail(
   const stamp = formatReceivedAt(receivedAt);
   const flags: TriggeredFlag[] = [];
   const details: TriggeredFlag[] = [];
+  const summaryAnswers: SummaryAnswer[] = [];
   const stats = Object.fromEntries(
     CATEGORY_ORDER.map((c) => [c, { total: 0, clear: 0, missing: 0 }]),
   ) as Record<Category, { total: number; clear: number; missing: number }>;
@@ -2809,6 +3690,22 @@ export function formatApplicationEmail(
         }
       }
       const hasDisclosure = populated(value) || (value === false && rule.risk === "false");
+      const answer = describeAnswer(section, key, value, rule, risk, note);
+      if (
+        category !== "consents" &&
+        category !== "other" &&
+        (contextActive || (hasDisclosure && note))
+      ) {
+        summaryAnswers.push({
+          ...answer,
+          category,
+          section,
+          key,
+          value,
+          flagged: risk,
+          ...(note ? { note } : {}),
+        });
+      }
       if (risk || (hasDisclosure && note)) {
         const isMissingConsent = consent && value !== true;
         flags.push({
@@ -2816,6 +3713,7 @@ export function formatApplicationEmail(
           category,
           section,
           key,
+          ...answer,
           label: risk ? (rule.flagLabel ?? rule.label) : rule.label,
           value: value === undefined ? null : value,
           displayValue: isMissingConsent
@@ -2851,6 +3749,7 @@ export function formatApplicationEmail(
           category,
           section,
           key,
+          ...answer,
           label: rule.label,
           value,
           displayValue: display(value),
@@ -2868,6 +3767,9 @@ export function formatApplicationEmail(
           section,
           key,
           label: fallbackLabel(key),
+          question: fallbackLabel(key),
+          applicantAnswer: display(value),
+          underwritingStatus: "Note: Unmapped field; manual review required",
           value,
           displayValue: display(value),
           note: "[Note: Unmapped field; manual review required]",
@@ -2882,6 +3784,9 @@ export function formatApplicationEmail(
         section,
         key: section,
         label: fallbackLabel(section),
+        question: fallbackLabel(section),
+        applicantAnswer: display(value),
+        underwritingStatus: "Note: Unmapped section; manual review required",
         value,
         displayValue: display(value),
         note: "[Note: Unmapped section; manual review required]",
@@ -2931,46 +3836,103 @@ export function formatApplicationEmail(
   for (let i = 0; i < profile.length; i += 2)
     profileRows += `<tr>${cell(profile[i])}${profile[i + 1] ? cell(profile[i + 1]) : "<td></td>"}</tr>`;
   const banner = flagCount
-    ? `⚠️ ${flagCount} Underwriting Flag${flagCount === 1 ? "" : "s"} Triggered`
+    ? `${flagCount} Underwriting Flag${flagCount === 1 ? "" : "s"} Triggered`
     : missing
-      ? `⚠️ No flags in answered questions; ${missing} flag question(s) not answered`
+      ? `No flags in answered questions; ${missing} flag question(s) not answered`
       : "✅ No Underwriting Flags Triggered Across All 12 Categories";
+  const noteBanner = noteCount
+    ? `${noteCount} Disclosed Context Note${noteCount === 1 ? "" : "s"}`
+    : "";
   const allItems = [...flags, ...details];
   const groups = [...CATEGORY_ORDER, "consents", "other"] as const;
-  let flagsHtml = "",
-    flagsText = "";
-  for (const category of groups) {
-    const items = allItems.filter((f) => f.category === category);
-    if (!items.length) continue;
-    const title = categoryLabel(category);
-    flagsHtml += `<h3 style="font-size:15px;margin:16px 0 6px;">${escapeHtml(title)}</h3>${items.map(itemHtml).join("")}`;
-    flagsText += `\n${title}\n${items.map(itemText).join("\n")}\n`;
-  }
+  const moduleTitles: Partial<Record<Section, string>> = {
+    seizureModule: "Seizure Disorder",
+    respiratoryModule: "Sleep Apnea / COPD / Respiratory",
+    cardioNeuroModule: "Stroke / TIA / Heart Attack",
+    hypertensionModule: "High Blood Pressure",
+    diabetesModule: "Diabetes",
+    arthritisModule: "Arthritis",
+    asthmaModule: "Asthma",
+    cancerModule: "Cancer",
+  };
+  const contextHtml = (section: string) =>
+    moduleTitles[section as Section]
+      ? `<div style="font-size:10px;color:#64748b;margin-bottom:3px;">${escapeHtml(moduleTitles[section as Section])}</div>`
+      : "";
+  const ordered = groups.flatMap((category) =>
+    allItems.filter((item) => item.category === category),
+  );
+  const flagRows = ordered
+    .map(
+      (
+        item,
+      ) => `<tr style="break-inside:avoid;page-break-inside:avoid;background:${item.kind === "flag" ? "#fff7ed" : "#ffffff"};">
+    <td style="${styles.cell}">${escapeHtml(categoryLabel(item.category))}</td>
+    <td style="${styles.cell}">${contextHtml(item.section)}${escapeHtml(item.question)}</td>
+    <td style="${styles.cell}">${answerHtml(item)}</td>
+    <td style="${styles.cell}color:${item.kind === "flag" ? "#9a3412" : "#475569"};">${escapeHtml(item.note ?? item.underwritingStatus)}${item.explanation ? `<p style="font-size:11px;margin:5px 0 0;">${escapeHtml(item.explanation)}</p>` : ""}</td>
+  </tr>`,
+    )
+    .join("");
+  const flagsHtml = ordered.length
+    ? `<table aria-label="Underwriting flags and disclosed details" cellpadding="0" cellspacing="0" style="${styles.table}font-size:12px;line-height:1.4;">
+    <thead style="display:table-header-group;"><tr style="background:#e2e8f0;text-align:left;">
+      <th scope="col" width="17%" style="${styles.cell}">Category</th>
+      <th scope="col" width="35%" style="${styles.cell}">Question Asked</th>
+      <th scope="col" width="23%" style="${styles.cell}">Applicant's Answer</th>
+      <th scope="col" width="25%" style="${styles.cell}">Underwriting Takeaway</th>
+    </tr></thead><tbody>${flagRows}</tbody></table>`
+    : "<p>No additional details disclosed.</p>";
+  const flagsText = ordered
+    .map(
+      (item) =>
+        `${categoryLabel(item.category)}${moduleTitles[item.section as Section] ? ` / ${moduleTitles[item.section as Section]}` : ""}\n${itemText(item)}`,
+    )
+    .join("\n\n");
   let breakdownHtml = "",
     breakdownText = "";
   for (const category of CATEGORY_ORDER) {
-    const triggered = flags.filter((f) => f.category === category && f.kind === "flag");
+    const triggered = flags.filter((item) => item.category === category && item.kind === "flag");
     const notes = flags.filter(
-      (f) => f.category === category && (f.kind === "note" || f.note),
+      (item) => item.category === category && (item.kind === "note" || item.note),
     ).length;
     const s = stats[category];
     const row = triggered.length
-      ? `⚠️ ${CATEGORY_LABELS[category]} — ${triggered.length} flag(s); ${s.clear} clear, ${s.missing} not answered`
+      ? `${CATEGORY_LABELS[category]} — ${triggered.length} flag(s); ${s.clear} clear, ${s.missing} not answered`
       : s.missing
         ? `○ ${CATEGORY_LABELS[category]} — No flags in answered questions (${s.missing} not answered)`
         : notes
           ? `ℹ️ ${CATEGORY_LABELS[category]} — No rule flags; ${notes} disclosed note(s) (0/${s.total} flags)`
           : `✅ ${CATEGORY_LABELS[category]} — All Clear (0/${s.total} flags)`;
-    breakdownHtml += `<tr><td style="padding:8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(row)}${triggered.length ? triggered.map(itemHtml).join("") : ""}</td></tr>`;
-    breakdownText += `${row}\n${triggered.length ? triggered.map(itemText).join("\n") + "\n" : ""}`;
+    const answers = summaryAnswers.filter((answer) => answer.category === category);
+    const rows = answers
+      .map((answer) => {
+        const clear = typeof answer.value === "boolean" && answer.underwritingStatus === "CLEAR";
+        const tag = answer.flagged ? " (Flag)" : clear ? " (Clear)" : "";
+        return `<tr style="break-inside:avoid;page-break-inside:avoid;${answer.flagged ? "background:#fff7ed;color:#7c2d12;" : "color:#475569;"}"><td width="72%" style="${styles.summaryCell}">${contextHtml(answer.section)}${escapeHtml(answer.question)}</td><td width="28%" style="${styles.summaryCell}">${answerHtml(answer)}${tag ? `<span style="font-weight:${answer.flagged ? "bold" : "normal"};">${escapeHtml(tag)}</span>` : ""}${answer.note ? `<div style="font-size:10px;color:#854d0e;margin-top:4px;">${escapeHtml(answer.note)}</div>` : ""}</td></tr>`;
+      })
+      .join("");
+    breakdownHtml += `<h3 style="font-size:14px;margin:16px 0 5px;padding:7px 8px;background:${triggered.length ? "#fff7ed" : s.missing || notes ? "#f1f5f9" : "#f0fdf4"};color:${triggered.length ? "#9a3412" : s.missing || notes ? "#475569" : "#166534"};break-after:avoid;page-break-after:avoid;">${escapeHtml(row)}</h3><table aria-label="${escapeHtml(CATEGORY_LABELS[category])} questions and answers" cellpadding="0" cellspacing="0" style="${styles.table}font-size:11px;line-height:1.35;"><thead style="display:table-header-group;"><tr style="text-align:left;background:#f8fafc;"><th scope="col" width="72%" style="${styles.summaryCell}">Question Asked</th><th scope="col" width="28%" style="${styles.summaryCell}">Applicant's Answer</th></tr></thead><tbody>${rows}</tbody></table>`;
+    breakdownText += `${row}\n${answers.map((answer) => `${moduleTitles[answer.section as Section] ? `${moduleTitles[answer.section as Section]} — ` : ""}${answer.question}\n  ${answerText(answer)}${answer.flagged ? " (Flag)" : typeof answer.value === "boolean" && answer.underwritingStatus === "CLEAR" ? " (Clear)" : ""}${answer.note ? `\n  ${answer.note}` : ""}`).join("\n")}\n\n`;
   }
   // Known privacy-retired field is removed even when this pure function is called directly.
   const auditPayload = structuredClone(payload);
   if (auditPayload.residencyTravel)
     delete (auditPayload.residencyTravel as unknown as Record<string, unknown>)
       .res_green_card_or_visa_id;
-  const raw = JSON.stringify(auditPayload, null, 2);
-  const html = `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Practice Application Summary</title></head><body style="${styles.page}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:760px;table-layout:fixed;"><tr><td><div style="padding:18px;background:#142d4e;color:#ffffff;border-radius:8px;"><h1 style="font-size:22px;margin:0 0 8px;">Practice Life Insurance Application — Triage Summary</h1><strong>${DISCLOSURE}</strong><p style="margin:8px 0 0;">Received: ${escapeHtml(stamp.central)}<br><span style="font-family:monospace;font-size:12px;">UTC: ${escapeHtml(stamp.utc)}</span></p></div><div style="${styles.card}"><h2 style="font-size:18px;margin:0 0 8px;">Applicant &amp; Contact Profile</h2><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="table-layout:fixed;">${profileRows}</table></div><div style="${styles.card}background:${flagCount ? "#fff1f2" : "#f0fdf4"};border-color:${flagCount ? "#fda4af" : "#86efac"};"><h2 style="font-size:18px;margin:0 0 8px;">A — ⚠️ Underwriting Flags &amp; Disclosed Details</h2><strong>${escapeHtml(banner)}</strong>${noteCount ? `<p style="margin:8px 0;">ℹ️ ${noteCount} disclosed / context note(s) also require review.</p>` : ""}${flagsHtml || "<p>No additional details disclosed.</p>"}</div><div style="${styles.card}"><h2 style="font-size:18px;margin:0 0 8px;">B — ✅ All-Clear Categories &amp; Full Section Breakdown</h2><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${breakdownHtml}</table></div><div style="${styles.card}"><h2 style="font-size:18px;margin:0 0 8px;">C — Raw Payload</h2><p style="font-size:12px;color:#64748b;">Some email readers show this audit block expanded. The plain-text version also contains the complete payload.</p><details><summary style="font-weight:bold;cursor:pointer;">View Raw JSON Payload</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font-size:11px;">${escapeHtml(raw)}</pre></details></div></td></tr></table></td></tr></table></body></html>`;
-  const text = `Practice Life Insurance Application — Triage Summary\n${DISCLOSURE}\nReceived: ${stamp.central}\nUTC: ${stamp.utc}\n\nAPPLICANT & CONTACT PROFILE\n${profile.map(([k, v]) => `${k}: ${v}`).join("\n")}\n\nA — UNDERWRITING FLAGS & DISCLOSED DETAILS\n${banner}${noteCount ? `\n${noteCount} disclosed / context note(s) also require review.` : ""}\n${flagsText || "No additional details disclosed.\n"}\nB — ALL-CLEAR CATEGORIES & FULL SECTION BREAKDOWN\n${breakdownText}\nC — AUDIT\nView Raw JSON Payload\n${raw}\n`;
+  // Keep the complete supported audit payload; compact formatting avoids the
+  // many one-key-per-line pages Gmail prints when it expands <details>.
+  const raw = JSON.stringify(auditPayload);
+  const html = `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Practice Application Summary</title></head>
+<body style="${styles.page}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:760px;table-layout:fixed;"><tr><td>
+<div style="padding:18px;background:#142d4e;color:#ffffff;border-radius:8px;"><h1 style="font-size:22px;margin:0 0 8px;">Practice Life Insurance Application — Triage Summary</h1><strong>${DISCLOSURE}</strong><p style="margin:8px 0 0;">Received: ${escapeHtml(stamp.central)}<br><span style="font-family:monospace;font-size:12px;">UTC: ${escapeHtml(stamp.utc)}</span></p></div>
+<div style="${styles.card}"><h2 style="${styles.heading}">Applicant &amp; Contact Profile</h2><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="table-layout:fixed;">${profileRows}</table></div>
+<div style="${styles.card}"><h2 style="${styles.heading}">A — Underwriting Flags &amp; Disclosed Notes</h2>
+<p style="margin:0 0 8px;padding:9px;background:${flagCount ? "#fff7ed" : "#f0fdf4"};color:${flagCount ? "#9a3412" : "#166534"};font-weight:bold;break-inside:avoid;page-break-inside:avoid;">${escapeHtml(banner)}</p>
+${noteCount ? `<p style="margin:0 0 10px;padding:7px 9px;background:#f1f5f9;font-weight:bold;">${escapeHtml(noteBanner)}</p>` : ""}${flagsHtml}</div>
+<div style="${styles.card}"><h2 style="${styles.heading}">B — Full Question &amp; Answer Summary</h2>${breakdownHtml}</div>
+<div style="${styles.card}"><h2 style="${styles.heading}">C — Raw Payload</h2><details><summary style="font-weight:bold;cursor:pointer;">View Raw JSON Payload</summary><pre style="font-size:10px;line-height:1.25;white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere;margin:8px 0 0;">${escapeHtml(raw)}</pre></details></div>
+</td></tr></table></td></tr></table></body></html>`;
+  const text = `Practice Life Insurance Application — Triage Summary\n${DISCLOSURE}\nReceived: ${stamp.central}\nUTC: ${stamp.utc}\n\nAPPLICANT & CONTACT PROFILE\n${profile.map(([key, value]) => `${key}: ${value}`).join("\n")}\n\nA — UNDERWRITING FLAGS & DISCLOSED NOTES\n${banner}${noteBanner ? `\n${noteBanner}` : ""}\n\n${flagsText || "No additional details disclosed."}\n\nB — FULL QUESTION & ANSWER SUMMARY\n${breakdownText}\nC — AUDIT\nView Raw JSON Payload\n${raw}\n`;
   return { subject, html, text, flagCount, flags };
 }

@@ -171,7 +171,7 @@ describe("disclosures and all-clear layout", () => {
     expect(result.flags.some((f) => f.key === "res_foreign_travel_details")).toBe(false);
     expect(summary(result.html)).toContain("Synthetic travel");
   });
-  it("collapses clear categories and expands a triggered category", () => {
+  it("shows clear question tables and expands triggered answers without raw keys", () => {
     const result = formatApplicationEmail(clear(), receivedAt);
     expect(result.flagCount).toBe(0);
     expect(summary(result.html)).toContain("✅ Health &amp; Medical — All Clear (0/27 flags)");
@@ -183,7 +183,8 @@ describe("disclosures and all-clear layout", () => {
     expect(summary(triggered.html)).toContain(
       "HIV / AIDS Diagnosis, Positive Test, Treatment, or Advice",
     );
-    expect(summary(triggered.html)).toContain("medical_hiv_aids: true");
+    expect(summary(triggered.html)).not.toContain("medical_hiv_aids: true");
+    expect(summary(triggered.html)).toContain("Question Asked");
     expect(summary(triggered.html)).toContain("26 clear");
   });
   it("preserves three flags for the exact attachment sample, and three flags plus one note for the pictured variant", () => {
