@@ -1,3 +1,4 @@
+import { practiceApplicationDraftSchema } from "./practiceApplication.schema";
 // Prune inactive answers before the draft/submit schemas validate the payload.
 type Answers = Record<string, any>;
 export const moduleConditions: Record<string, string[]> = {
@@ -174,3 +175,75 @@ export function removeEmptyStrings(input: Answers): Answers {
 export const prepareApplication = (v: Answers) =>
   removeEmptyStrings(pruneHidden(v));
 export const DRAFT_KEY = "practice-app-draft-v1";
+
+/** How many salvage passes are worth trying before the snapshot is refused. */
+const MAX_DRAFT_SALVAGE_PASSES = 40;
+
+/**
+ * Delete the value an issue names, and only when it is a leaf: a refused object is
+ * a whole section, which is never what a single field issue means. Array elements
+ * are spliced out so a refused medication row cannot leave a hole behind.
+ */
+function dropRefusedLeaf(target: unknown, path: readonly (string | number)[]): boolean {
+  if (path.length === 0) return false;
+  const container = path
+    .slice(0, -1)
+    .reduce<unknown>(
+      (node, key) =>
+        node !== null && typeof node === "object"
+          ? (node as Record<string | number, unknown>)[key]
+          : undefined,
+      target,
+    );
+  if (container === null || typeof container !== "object") return false;
+  const key = path[path.length - 1];
+  const record = container as Record<string | number, unknown>;
+  if (!(key in record)) return false;
+  const value = record[key];
+  if (value !== null && typeof value === "object" && !Array.isArray(value)) return false;
+  if (Array.isArray(container)) {
+    const index = Number(key);
+    if (!Number.isInteger(index)) return false;
+    container.splice(index, 1);
+    return true;
+  }
+  delete record[key];
+  return true;
+}
+
+/**
+ * The draft snapshot that can actually be written, plus the field paths the draft
+ * schema refused this time.
+ *
+ * Autosave used to reject the whole snapshot when any single answer failed the
+ * draft schema - a half-typed email or phone number was enough - so a visitor who
+ * had answered everything and then started typing their contact details stopped
+ * being saved while the page still promised it was saving them. A draft is work in
+ * progress: an incomplete answer is not draftable yet, but the sixty answers around
+ * it are. This drops exactly the paths the schema refuses and keeps everything else.
+ *
+ * The draft schema carries no cross-field refinements, so every issue it raises
+ * names a leaf field: nothing is dropped that the visitor did not leave incomplete.
+ * The strict schema still decides what a resume restores and what submit transmits.
+ */
+export function draftSnapshotForStorage(values: Answers): {
+  snapshot: Record<string, unknown> | null;
+  dropped: string[];
+} {
+  const candidate = structuredClone(values);
+  const dropped: string[] = [];
+  // Each pass removes at least one refused leaf and the schema cannot name more
+  // fields than the worksheet has: the bound is a guard, not a working limit.
+  for (let pass = 0; pass < MAX_DRAFT_SALVAGE_PASSES; pass += 1) {
+    const parsed = practiceApplicationDraftSchema.safeParse(candidate);
+    if (parsed.success) return { snapshot: parsed.data as Record<string, unknown>, dropped };
+    let removed = 0;
+    for (const issue of parsed.error.issues) {
+      if (!dropRefusedLeaf(candidate, issue.path)) continue;
+      dropped.push(issue.path.join("."));
+      removed += 1;
+    }
+    if (removed === 0) return { snapshot: null, dropped };
+  }
+  return { snapshot: null, dropped };
+}
