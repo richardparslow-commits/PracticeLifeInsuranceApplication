@@ -62,3 +62,37 @@ The draft lifecycle follow-up was verified with component/server tests and the p
 - The new tests were checked against the defect they describe: temporarily restoring the previous
   strict-parse save makes 4 of the 6 fail, so they detect the regression rather than merely
   passing beside it.
+
+## UX-H5 follow-up (a collapsed mental-health block no longer mails the answers it hid)
+
+- The "Additional Mental Health Details" block is rendered only while a condition is checked, the
+  history/current-treatment answer is Yes, or the free-text box names a condition. `pruneHidden` in
+  `src/lib/prepareApplication.ts` (mirrored byte-for-byte into
+  `supabase/functions/_shared/prepareApplication.ts`, which the client/server parity test requires)
+  had no rule for the block itself, so unticking the conditions, answering No and clearing the box
+  left `mh_selected_other_text`, `mh_rx_details`, `mh_selected_dx_date`, `mh_selected_last_seen`,
+  `mh_selected_psychiatrist_5y`, `mh_selected_inpatient_5y`, `mh_selected_unable_work_5y`,
+  `mh_selected_suicidal_thoughts`, `mh_selected_suicide_attempt`, `mh_selected_disability` and the
+  detail fields those last five drag along in the saved draft and in the copy that is mailed - a
+  privacy-accuracy defect, since the visitor could no longer see or retract any of it.
+- One visibility rule now decides both things: `mentalHealthDetailVisible` is exported from the
+  shared module and used by `MentalHealthSection` itself, so the block on screen and the block the
+  payload keeps cannot drift. The fields it governs are named once, in
+  `MENTAL_HEALTH_DETAIL_FIELDS`, next to the rule that shows them.
+- When a populated block collapses, the section says so in one line (`role="status"`): *"You answered
+  the hidden mental-health details, but they are not shown while this block is closed, so the saved
+  draft and the copy that is sent leave them out. Check a condition to bring them back."* The
+  answers stay in form state, so reopening the block shows them again and they are saved and sent
+  once more; only the closed block is left out. A block that held nothing but "No" answers, or
+  nothing at all, shows no notice.
+- Automated checks on this tree: 295 passed in 15 files (`npx vitest run`), including 13 new tests
+  in `tests/mental-health-block-prune.test.tsx` (the audit's reproduction through `pruneHidden`,
+  `prepareApplication` and `draftSnapshotForStorage`; every reason the block stays open; the notice
+  appearing, clearing, and staying out of the way; and a test that reads the block's field names out
+  of `sections.tsx` and asserts the prune list is exactly those fields - so a field added to the
+  block cannot quietly keep being mailed again). Production build: passed (`npm run build`).
+- The new tests were checked against the defect they describe: deleting the new guard from
+  `pruneHidden` makes 4 of the 13 fail, so they detect the regression rather than merely passing
+  beside it.
+- The notice is asserted in jsdom (present, `role="status"`, copy, and gone again when the block
+  reopens). It was not inspected in a browser this time.
