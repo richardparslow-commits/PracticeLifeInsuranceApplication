@@ -122,7 +122,8 @@ it.each(statuses)(
     const email = JSON.parse(fetch.mock.calls[0][1].body);
     expect(email.text).not.toContain(privateMarker);
     expect(email.text).not.toContain("res_green_card_or_visa_id");
-    expect(email.text.includes("Synthetic visa type")).toBe(status === "Other");
+    expect(email.text).toContain("Synthetic visa type");
+    if (status !== "Other") expect(email.text).toContain("[Note: Populated while parent condition is inactive]");
     expect(email.text).toContain("Synthetic travel itinerary");
   },
 );

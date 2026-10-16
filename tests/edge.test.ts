@@ -58,7 +58,7 @@ describe("edge email handler", () => {
     expect((await handler(request(app))).status).toBe(400);
     expect(fetch).not.toHaveBeenCalled();
   });
-  it("sends full formatted validated JSON only to the fixed recipient", async () => {
+  it("sends HTML, plain-text triage, and supported audit JSON only to the fixed recipient", async () => {
     const fetch = vi
       .fn()
       .mockResolvedValue(
@@ -71,6 +71,8 @@ describe("edge email handler", () => {
     expect(mail.to).toEqual(["richardparslow@lifepolicypilot.blog"]);
     expect(mail.text).toContain("Practice worksheet only");
     expect(mail.text).toContain("test@example.com");
+    expect(mail.html).toContain("Applicant &amp; Contact Profile");
+    expect(mail.subject).toMatch(/^\[Practice App\]/);
     expect(await response.json()).toEqual({ ok: true });
   });
   it("preserves failure when Resend rejects", async () => {
@@ -139,5 +141,30 @@ describe("edge email handler", () => {
     expect(response.status).toBe(503);
     expect(fetch).not.toHaveBeenCalled();
     expect(send).not.toHaveBeenCalled();
+  });
+});
+
+describe("triage delivery preserves current inconsistent disclosures", () => {
+  it("sends the formatter's dynamic subject and both formats after normal validation", async () => {
+    const app = validApplication();
+    app.residencyTravel.res_travel_outside_us_24m = false;
+    app.residencyTravel.res_high_risk_countries_2y = false;
+    app.residencyTravel.res_travel_outside_us_details = "Synthetic orphan itinerary";
+    const send = vi.fn().mockResolvedValue(Response.json({ id: "synthetic" }));
+    const response = await createHandler({ env, fetch: vi.fn(), now: () => new Date("2026-10-16T02:15:22.760Z"), emailDelivery: { configured: true, send } })(request(app));
+    expect(response.status).toBe(200);
+    const mail = send.mock.calls[0][0];
+    expect(mail.subject).toMatch(/^\[Practice App\].*\(Oct 15, 2026\)$/);
+    expect(mail.text).toContain("Synthetic orphan itinerary"); expect(mail.html).toContain("Synthetic orphan itinerary");
+    expect(mail.text).toContain("[Note: Populated while parent toggle is No]");
+  });
+  it("rejects an invalid hidden child value explicitly without delivery or answer leakage", async () => {
+    const app = validApplication();
+    app.residencyTravel.res_travel_outside_us_24m = false;
+    app.residencyTravel.res_travel_outside_us_details = { invalid: "DO-NOT-LEAK" };
+    const send = vi.fn();
+    const response = await createHandler({ env, fetch: vi.fn(), emailDelivery: { configured: true, send } })(request(app));
+    expect(response.status).toBe(400); expect(send).not.toHaveBeenCalled();
+    expect(await response.text()).not.toContain("DO-NOT-LEAK");
   });
 });

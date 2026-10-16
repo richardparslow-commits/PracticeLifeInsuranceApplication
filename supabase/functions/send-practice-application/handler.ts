@@ -3,7 +3,12 @@ import {
   canTransmit,
 } from "../_shared/practiceApplication.schema.ts";
 import { prepareApplication } from "../_shared/prepareApplication.ts";
-export type WorksheetEmail = { to: string[]; subject: string; text: string };
+import {
+  formatApplicationEmail,
+  preserveEmailDisclosures,
+  type ApplicationInput,
+} from "../_shared/formatApplicationEmail.ts";
+export type WorksheetEmail = { to: string[]; subject: string; text: string; html: string };
 export type EmailDelivery = {
   configured: boolean;
   send: (message: WorksheetEmail) => Promise<Response>;
@@ -28,25 +33,20 @@ export function createHandler(deps: Dependencies) {
       "Content-Type": "application/json",
       "Cache-Control": "no-store",
       Vary: "Origin",
-      "Access-Control-Allow-Headers":
-        "authorization, x-client-info, apikey, content-type",
+      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
     };
-    if (origin && allowed.includes(origin))
-      headers["Access-Control-Allow-Origin"] = origin;
+    if (origin && allowed.includes(origin)) headers["Access-Control-Allow-Origin"] = origin;
     const reply = (status: number, body: unknown) =>
       new Response(JSON.stringify(body), { status, headers });
-    if (origin && !allowed.includes(origin))
-      return reply(403, { error: "Origin not allowed" });
-    if (req.method === "OPTIONS")
-      return new Response(null, { status: 204, headers });
-    if (req.method !== "POST")
-      return reply(405, { error: "Method not allowed" });
+    if (origin && !allowed.includes(origin)) return reply(403, { error: "Origin not allowed" });
+    if (req.method === "OPTIONS") return new Response(null, { status: 204, headers });
+    if (req.method !== "POST") return reply(405, { error: "Method not allowed" });
     if (!req.headers.get("content-type")?.includes("application/json"))
       return reply(415, { error: "JSON required" });
     if (Number(req.headers.get("content-length") ?? 0) > LIMIT)
       return reply(413, { error: "Request too large" });
-    let payload: any;
+    let payload: unknown;
     try {
       const reader = req.body?.getReader();
       if (!reader) return reply(400, { error: "Request body required" });
@@ -72,7 +72,7 @@ export function createHandler(deps: Dependencies) {
     } catch {
       return reply(400, { error: "Invalid JSON" });
     }
-    const app = payload?.application;
+    const app = (payload as { application?: ApplicationInput } | null)?.application;
     // Strict booleans as well as the supplied helper prevent truthy strings bypassing consent.
     if (
       app?.consents?.consent_contact !== true ||
@@ -82,9 +82,7 @@ export function createHandler(deps: Dependencies) {
       return reply(400, { error: "Both consents are required" });
     let result;
     try {
-      result = practiceApplicationSubmitSchema.safeParse(
-        prepareApplication(app),
-      );
+      result = practiceApplicationSubmitSchema.safeParse(prepareApplication(app));
     } catch {
       return reply(400, { error: "Invalid application" });
     }
@@ -102,17 +100,19 @@ export function createHandler(deps: Dependencies) {
     if (delivery ? !delivery.configured : !apiKey || !from)
       return reply(503, { error: "Email delivery is not configured" });
     const submittedAt = (deps.now?.() ?? new Date()).toISOString();
-    const text =
-      "Practice Life Insurance Application\nPractice worksheet only — not a formal application; does not bind coverage.\nReceived: " +
-      submittedAt +
-      "\n\n" +
-      JSON.stringify(result.data, null, 2);
+    let formatted;
+    try {
+      formatted = formatApplicationEmail(preserveEmailDisclosures(result.data, app), submittedAt);
+    } catch {
+      return reply(400, { error: "Invalid disclosed application details" });
+    }
     // No database, storage, console logging, or echoing PHI in errors.
     try {
       const message: WorksheetEmail = {
         to: ["richardparslow@lifepolicypilot.blog"],
-        subject: "Practice Life Insurance Application",
-        text,
+        subject: formatted.subject,
+        text: formatted.text,
+        html: formatted.html,
       };
       const response = delivery
         ? await delivery.send(message)
@@ -125,8 +125,7 @@ export function createHandler(deps: Dependencies) {
             body: JSON.stringify({ from, ...message }),
             signal: AbortSignal.timeout(20000),
           });
-      if (!response.ok)
-        return reply(502, { error: "Email service did not accept delivery" });
+      if (!response.ok) return reply(502, { error: "Email service did not accept delivery" });
       const receipt = await response.json();
       if (typeof receipt?.id !== "string" || !receipt.id.trim())
         return reply(502, { error: "Email acceptance was not confirmed" });

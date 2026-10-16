@@ -38,7 +38,7 @@ async function consentAndSubmit() {
 }
 
 describe("truthful answers through the worksheet", () => {
-  it("lets a never-user remove a stale last-use date and submit without inventing one", async () => {
+  it("lets a never-user submit without inventing a date and preserves a stale disclosure for email review", async () => {
     const app = validApplication();
     localStorage.setItem(
       DRAFT_KEY,
@@ -74,7 +74,7 @@ describe("truthful answers through the worksheet", () => {
     expect(invoke).toHaveBeenCalledTimes(1);
     const submitted = invoke.mock.calls[0][1].body.application;
     expect(submitted.nicotineSmoking.nic_ever_used).toBe(false);
-    expect(submitted.nicotineSmoking).not.toHaveProperty("nic_date_last_used");
+    expect(submitted.nicotineSmoking.nic_date_last_used).toBe("2010-01-01");
   }, 15000);
   it("requires and transmits the actual unlisted condition entered under Other", async () => {
     const app = validApplication();
