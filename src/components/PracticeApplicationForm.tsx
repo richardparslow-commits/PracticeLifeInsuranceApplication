@@ -198,6 +198,7 @@ function Worksheet({ cleared, onClear }: {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [banner, setBanner] = useState<string | null>(null);
+  const [cleanupWarning, setCleanupWarning] = useState<string | null>(null);
   const [draftStatus, setDraftStatus] = useState(cleared ? "Draft cleared." : "");
   useEffect(() => {
     if (restored.cleanedDraft === null) return;
@@ -252,6 +253,17 @@ function Worksheet({ cleared, onClear }: {
     const timer = setTimeout(() => saveDraft(), 600);
     return () => clearTimeout(timer);
   }, [all, sent, isDirty]);
+  function deleteSubmittedDraft(retry = false) {
+    let warning: string | null = null;
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+    } catch {
+      warning = retry
+        ? "This browser still could not delete the saved draft."
+        : "This browser could not delete the saved draft.";
+    }
+    if (mounted.current) setCleanupWarning(warning);
+  }
   function reveal(path: string) {
     const prefix = path.split(".")[0];
     const section =
@@ -330,11 +342,7 @@ function Worksheet({ cleared, onClear }: {
       );
       if (error || data?.ok !== true) throw new Error("Delivery not confirmed");
       sentRef.current = true;
-      try {
-        localStorage.removeItem(DRAFT_KEY);
-      } catch {
-        /* No application data is logged. */
-      }
+      deleteSubmittedDraft();
       reset(EMPTY);
       if (mounted.current) setSent(true);
     } catch {
@@ -349,13 +357,40 @@ function Worksheet({ cleared, onClear }: {
   }
   if (sent)
     return (
-      <Alert className="mx-auto max-w-3xl bg-white p-8" role="status">
-        <AlertTitle>Sent — thank you!</AlertTitle>
-        <AlertDescription>
-          Your practice worksheet was accepted by the email service for delivery
-          to Richard. This does not create insurance coverage.
-        </AlertDescription>
-      </Alert>
+      <div className="mx-auto max-w-3xl space-y-4">
+        <Alert className="bg-white p-8" role="status">
+          <AlertTitle>Sent — thank you!</AlertTitle>
+          <AlertDescription>
+            <p>
+              Your practice worksheet was accepted by the email service for delivery
+              to Richard. This does not create insurance coverage.
+            </p>
+            {!cleanupWarning && (
+              <p className="mt-3">Saved draft removed from this browser.</p>
+            )}
+          </AlertDescription>
+        </Alert>
+        {cleanupWarning && (
+          <Alert variant="destructive" role="alert">
+            <AlertTitle>Saved draft could not be deleted</AlertTitle>
+            <AlertDescription>
+              <p>{cleanupWarning}</p>
+              <p className="mt-2">
+                Your saved health and financial answers may still be on this device.
+                Retry deleting the saved draft. This will not resend your worksheet.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-3"
+                onClick={() => deleteSubmittedDraft(true)}
+              >
+                Retry deleting saved draft
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
     );
   const errs = methods.formState.errors as Record<string, any>;
   const answered = progressKeys.filter((k) => {
