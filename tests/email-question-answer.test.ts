@@ -253,6 +253,46 @@ describe("literal question and answer presentation", () => {
     );
   });
 
+  it.each([
+    [
+      "hypertensionModule",
+      "htn_current_meds",
+      "High Blood Pressure",
+      { htn_meds_last12months: true },
+    ],
+    [
+      "diabetesModule",
+      "dm_current_meds",
+      "Diabetes 1 or 2",
+      { dm_control_method: ["Oral Medication"] },
+    ],
+    ["asthmaModule", "asthma_current_meds", "Asthma", {}],
+  ] as const)(
+    "keeps %s medication disclosures prominent and preserves each row's printed condition context",
+    (section, key, trigger, parents) => {
+      const app = clear();
+      app.healthMedical!.conditions_triggered = [trigger];
+      (app as Record<string, unknown>)[section] = {
+        ...parents,
+        [key]: [{ name: "Synthetic module medication", dosage: "5 mg", frequency: "Daily" }],
+      };
+      const document = doc(app);
+      const question = (FIELD_REGISTRY[section] as Record<string, { question: string }>)[key]
+        .question;
+      const triage = rowFor(tableA(document), question);
+      expect(triage.querySelector("td:nth-child(3) li")!.textContent).toContain(
+        "Synthetic module medication",
+      );
+      const row = rowFor(categoryTable(document, "Health & Medical"), question);
+      expect(row.querySelector("td:first-child small")!.textContent).toBe(
+        section === "diabetesModule" ? "Diabetes" : trigger,
+      );
+      expect(row.querySelector("td:last-child li")!.textContent).toContain(
+        "Synthetic module medication",
+      );
+    },
+  );
+
   it.each([false, true])(
     "keeps all eight medical modules below a conservative HTML size budget (answered: %s)",
     (answered) => {

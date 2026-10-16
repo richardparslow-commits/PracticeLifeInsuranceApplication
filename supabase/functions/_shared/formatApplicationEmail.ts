@@ -3727,7 +3727,10 @@ export function formatApplicationEmail(
               }
             : {}),
         });
-      } else if (hasDisclosure && rule.kind === "detailedMedications") {
+      } else if (
+        hasDisclosure &&
+        (rule.kind === "medications" || rule.kind === "detailedMedications")
+      ) {
         medicationDetails.push({
           kind: "note",
           category,
@@ -3891,17 +3894,11 @@ export function formatApplicationEmail(
           ? `ℹ️ ${CATEGORY_LABELS[category]} — No rule flags; ${notes} disclosed note(s) (0/${s.total} flags)`
           : `✅ ${CATEGORY_LABELS[category]} — All Clear (0/${s.total} flags)`;
     const answers = summaryAnswers.filter((answer) => answer.category === category);
-    let previousSection: string | undefined;
     const rows = answers
       .map((answer) => {
         const clear = typeof answer.value === "boolean" && answer.underwritingStatus === "CLEAR";
         const tag = answer.flagged ? " (Flag)" : clear ? " (Clear)" : "";
-        const moduleHeading =
-          previousSection !== answer.section && moduleTitles[answer.section as Section]
-            ? `<tr><th colspan="2" align="left" style="background:#f1f5f9;">${escapeHtml(moduleTitles[answer.section as Section])}</th></tr>`
-            : "";
-        previousSection = answer.section;
-        return `${moduleHeading}<tr valign="top" style="break-inside:avoid;border-bottom:1px solid #e2e8f0;${answer.flagged ? "background:#fff7ed;color:#7c2d12;" : ""}"><td>${escapeHtml(answer.question)}</td><td>${answerHtml(answer)}${tag ? escapeHtml(tag) : ""}${answer.note ? `<div style="font-size:10px;color:#854d0e;">${escapeHtml(answer.note)}</div>` : ""}</td></tr>`;
+        return `<tr valign="top" style="break-inside:avoid;border-bottom:1px solid #e2e8f0;${answer.flagged ? "background:#fff7ed;color:#7c2d12;" : ""}"><td>${moduleTitles[answer.section as Section] ? `<small>${escapeHtml(moduleTitles[answer.section as Section])}</small><br>` : ""}${escapeHtml(answer.question)}</td><td>${answerHtml(answer)}${tag ? escapeHtml(tag) : ""}${answer.note ? `<div style="font-size:10px;color:#854d0e;">${escapeHtml(answer.note)}</div>` : ""}</td></tr>`;
       })
       .join("");
     breakdownHtml += `<h3 style="font-size:14px;margin:16px 0 5px;padding:7px 8px;background:${triggered.length ? "#fff7ed" : s.missing || notes ? "#f1f5f9" : "#f0fdf4"};color:${triggered.length ? "#9a3412" : s.missing || notes ? "#475569" : "#166534"};break-after:avoid;page-break-after:avoid;">${escapeHtml(row)}</h3><table aria-label="${escapeHtml(CATEGORY_LABELS[category])} questions and answers" cellpadding="3" cellspacing="0" style="${styles.table}font-size:11px;line-height:1.35;color:#475569;"><thead style="display:table-header-group;"><tr style="text-align:left;background:#f8fafc;"><th scope="col" width="72%">Question Asked</th><th scope="col" width="28%">Applicant's Answer</th></tr></thead><tbody>${rows}</tbody></table>`;
