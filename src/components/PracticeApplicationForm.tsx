@@ -44,7 +44,7 @@ import {
   drugQs,
 } from "./form/questions";
 import { supabase } from "@/integrations/supabase/client";
-import { DRAFT_KEY, prepareApplication } from "@/lib/prepareApplication";
+import { DRAFT_KEY, prepareApplication, sanitizeResidency } from "@/lib/prepareApplication";
 export const SECTIONS = [
   {
     id: "health",
@@ -130,18 +130,26 @@ const EMPTY: FieldValues = {
   consents: { consent_contact: false, consent_disclaimer: false },
 };
 function loadDraft() {
+  const empty = { answers: EMPTY, cleanedDraft: null as string | null };
   try {
     const raw = JSON.parse(localStorage.getItem(DRAFT_KEY) ?? "null");
-    const result = practiceApplicationDraftSchema.safeParse(raw);
-    return result.success
-      ? {
-          ...EMPTY,
-          ...result.data,
-          consents: { consent_contact: false, consent_disclaimer: false },
-        }
-      : EMPTY;
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return empty;
+    const sanitized = sanitizeResidency(raw);
+    const cleanedDraft =
+      JSON.stringify(raw) === JSON.stringify(sanitized) ? null : JSON.stringify(sanitized);
+    const result = practiceApplicationDraftSchema.safeParse(sanitized);
+    return {
+      answers: result.success
+        ? {
+            ...EMPTY,
+            ...result.data,
+            consents: { consent_contact: false, consent_disclaimer: false },
+          }
+        : EMPTY,
+      cleanedDraft,
+    };
   } catch {
-    return EMPTY;
+    return empty;
   }
 }
 const progressKeys = [
@@ -175,7 +183,8 @@ function Worksheet({ cleared, onClear }: {
   cleared: boolean;
   onClear: () => void;
 }) {
-  const [initial] = useState(loadDraft);
+  const [restored] = useState(loadDraft);
+  const initial = restored.answers;
   const methods = useForm<FieldValues>({
     defaultValues: initial,
     mode: "onSubmit",
@@ -190,6 +199,17 @@ function Worksheet({ cleared, onClear }: {
   const [sent, setSent] = useState(false);
   const [banner, setBanner] = useState<string | null>(null);
   const [draftStatus, setDraftStatus] = useState(cleared ? "Draft cleared." : "");
+  useEffect(() => {
+    if (restored.cleanedDraft === null) return;
+    try {
+      // Rewrite only the removed residency details; preserve other saved answers.
+      localStorage.setItem(DRAFT_KEY, restored.cleanedDraft);
+    } catch {
+      setDraftStatus(
+        "This browser could not remove private residency details from the older saved draft. Select Save draft to try again.",
+      );
+    }
+  }, [restored.cleanedDraft]);
   const sendingRef = useRef(false);
   const sentRef = useRef(false);
   const hasEdited = useRef(false);

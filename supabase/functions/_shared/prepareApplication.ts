@@ -21,8 +21,20 @@ export const moduleConditions: Record<string, string[]> = {
   asthmaModule: ["Asthma"],
   cancerModule: ["Cancer"],
 };
-export function pruneHidden(input: Answers): Answers {
+// Remove document IDs collected by older worksheets and status details that no
+// longer apply. Also used when reopening a draft, before the first new edit.
+export function sanitizeResidency(input: Answers): Answers {
   const app = structuredClone(input);
+  const residency = app.residencyTravel;
+  if (residency && typeof residency === "object") {
+    delete residency.res_green_card_or_visa_id;
+    if (residency.res_citizen_or_resident !== "Other")
+      delete residency.res_non_us_status;
+  }
+  return app;
+}
+export function pruneHidden(input: Answers): Answers {
+  const app = sanitizeResidency(input);
   const selected = app.healthMedical?.conditions_triggered ?? [];
   if (!selected.includes("Other") && app.healthMedical)
     delete app.healthMedical.medical_other_conditions;

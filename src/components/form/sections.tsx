@@ -422,17 +422,11 @@ export function ResidencySection() {
         label="Is the Proposed Insured a U.S. Citizen or Permanent Resident?"
         options={["U.S. Citizen", "Permanent Resident", "Other"]}
       />
-      {r.res_citizen_or_resident === "Permanent Resident" && (
-        <TextField
-          name={`${P}.res_green_card_or_visa_id`}
-          label="Visa or Green Card ID Number (optional)"
-          hint="For your privacy, we recommend NOT entering your real ID number on this practice worksheet."
-        />
-      )}
       {r.res_citizen_or_resident === "Other" && (
         <TextField
           name={`${P}.res_non_us_status`}
           label="Immigration status or visa type"
+          hint="Enter the status or visa type only; do not enter document or ID numbers."
         />
       )}
       <YesNoField
