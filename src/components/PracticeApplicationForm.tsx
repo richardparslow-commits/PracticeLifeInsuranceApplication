@@ -44,6 +44,7 @@ import {
   drugQs,
 } from "./form/questions";
 import { supabase } from "@/integrations/supabase/client";
+import { preserveEmailDisclosures } from "@/lib/formatApplicationEmail";
 import { DRAFT_KEY, prepareApplication, sanitizeResidency } from "@/lib/prepareApplication";
 export const SECTIONS = [
   {
@@ -336,7 +337,7 @@ function Worksheet({ cleared, onClear }: {
         {
           body: {
             submittedAt: new Date().toISOString(),
-            application: parsed.data,
+            application: preserveEmailDisclosures(parsed.data, values),
           },
         },
       );

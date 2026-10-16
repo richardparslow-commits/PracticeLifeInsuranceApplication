@@ -89,7 +89,7 @@ describe("residency privacy through the worksheet", () => {
     },
     15000,
   );
-  it("prunes an Other status after a residency change from saved, printed, and submitted answers", async () => {
+  it("prunes saved/printed inactive status but preserves its current disclosure for email review", async () => {
     saveLegacyDraft();
     invoke.mockResolvedValue({ data: { ok: false }, error: null });
     const user = userEvent.setup();
@@ -132,7 +132,7 @@ describe("residency privacy through the worksheet", () => {
     expect(submitted.residencyTravel).not.toHaveProperty(
       "res_green_card_or_visa_id",
     );
-    expect(submitted.residencyTravel).not.toHaveProperty("res_non_us_status");
+    expect(submitted.residencyTravel.res_non_us_status).toBe("Synthetic temporary visa");
     expect(submitted.residencyTravel.res_foreign_travel_details).toBe(
       "Synthetic travel itinerary",
     );
