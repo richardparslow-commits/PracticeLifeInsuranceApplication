@@ -434,6 +434,7 @@ type ParentCondition = {
     equals?: string | boolean;
     includes?: string;
     nonempty?: boolean;
+    mentalHealthText?: boolean;
   };
 }[Section];
 export interface FieldRule {
@@ -617,35 +618,15 @@ export const FIELD_REGISTRY = {
       kind: "boolean",
       risk: "true",
     },
-    mh_conditions: {
-      label: "Mental Health Conditions and History",
-      kind: "string",
-      risk: "none",
-      when: [{ section: "mentalHealth", field: "mh_history_current_treatment", equals: true }],
-    },
+    mh_conditions: { label: "Mental Health Conditions and History", kind: "string", risk: "none" },
     mh_mild_situational_recent: {
       label: "Recent Mild or Situational Mental Health Symptoms",
       kind: "boolean",
       risk: "true",
     },
-    mh_medications: {
-      label: "Mental Health Medications",
-      kind: "string",
-      risk: "none",
-      when: [{ section: "mentalHealth", field: "mh_history_current_treatment", equals: true }],
-    },
-    mh_dx_date: {
-      label: "Mental Health Diagnosis Date",
-      kind: "string",
-      risk: "none",
-      when: [{ section: "mentalHealth", field: "mh_history_current_treatment", equals: true }],
-    },
-    mh_last_seen: {
-      label: "Mental Health Last Visit",
-      kind: "string",
-      risk: "none",
-      when: [{ section: "mentalHealth", field: "mh_history_current_treatment", equals: true }],
-    },
+    mh_medications: { label: "Mental Health Medications", kind: "string", risk: "none" },
+    mh_dx_date: { label: "Mental Health Diagnosis Date", kind: "string", risk: "none" },
+    mh_last_seen: { label: "Mental Health Last Visit", kind: "string", risk: "none" },
     mh_psychiatrist_5y: { label: "Past 5 Yr: Psychiatrist Care", kind: "boolean", risk: "true" },
     mh_psychiatrist_details: {
       label: "Psychiatrist Care Dates and Facility",
@@ -710,8 +691,9 @@ export const FIELD_REGISTRY = {
       kind: "string",
       risk: "none",
       when: [
-        { section: "mentalHealth", field: "mh_selected_conditions", nonempty: true },
         { section: "mentalHealth", field: "mh_history_current_treatment", equals: true },
+        { section: "mentalHealth", field: "mh_selected_conditions", nonempty: true },
+        { section: "mentalHealth", field: "mh_conditions", mentalHealthText: true },
       ],
     },
     mh_selected_dx_date: {
@@ -719,8 +701,9 @@ export const FIELD_REGISTRY = {
       kind: "string",
       risk: "none",
       when: [
-        { section: "mentalHealth", field: "mh_selected_conditions", nonempty: true },
         { section: "mentalHealth", field: "mh_history_current_treatment", equals: true },
+        { section: "mentalHealth", field: "mh_selected_conditions", nonempty: true },
+        { section: "mentalHealth", field: "mh_conditions", mentalHealthText: true },
       ],
     },
     mh_selected_last_seen: {
@@ -728,14 +711,20 @@ export const FIELD_REGISTRY = {
       kind: "string",
       risk: "none",
       when: [
-        { section: "mentalHealth", field: "mh_selected_conditions", nonempty: true },
         { section: "mentalHealth", field: "mh_history_current_treatment", equals: true },
+        { section: "mentalHealth", field: "mh_selected_conditions", nonempty: true },
+        { section: "mentalHealth", field: "mh_conditions", mentalHealthText: true },
       ],
     },
     mh_selected_psychiatrist_5y: {
       label: "Selected Condition: Psychiatrist Care in Past 5 Yr",
       kind: "boolean",
       risk: "true",
+      when: [
+        { section: "mentalHealth", field: "mh_history_current_treatment", equals: true },
+        { section: "mentalHealth", field: "mh_selected_conditions", nonempty: true },
+        { section: "mentalHealth", field: "mh_conditions", mentalHealthText: true },
+      ],
     },
     mh_selected_psychiatrist_details: {
       label: "Selected Condition: Psychiatrist Care Details",
@@ -747,6 +736,11 @@ export const FIELD_REGISTRY = {
       label: "Selected Condition: Inpatient Care in Past 5 Yr",
       kind: "boolean",
       risk: "true",
+      when: [
+        { section: "mentalHealth", field: "mh_history_current_treatment", equals: true },
+        { section: "mentalHealth", field: "mh_selected_conditions", nonempty: true },
+        { section: "mentalHealth", field: "mh_conditions", mentalHealthText: true },
+      ],
     },
     mh_selected_inpatient_details: {
       label: "Selected Condition: Inpatient Care Details",
@@ -758,6 +752,11 @@ export const FIELD_REGISTRY = {
       label: "Selected Condition: Unable to Work in Past 5 Yr",
       kind: "boolean",
       risk: "true",
+      when: [
+        { section: "mentalHealth", field: "mh_history_current_treatment", equals: true },
+        { section: "mentalHealth", field: "mh_selected_conditions", nonempty: true },
+        { section: "mentalHealth", field: "mh_conditions", mentalHealthText: true },
+      ],
     },
     mh_selected_unable_work_details: {
       label: "Selected Condition: Work Disability Details",
@@ -769,11 +768,21 @@ export const FIELD_REGISTRY = {
       label: "Selected Condition: Suicidal Thoughts",
       kind: "boolean",
       risk: "true",
+      when: [
+        { section: "mentalHealth", field: "mh_history_current_treatment", equals: true },
+        { section: "mentalHealth", field: "mh_selected_conditions", nonempty: true },
+        { section: "mentalHealth", field: "mh_conditions", mentalHealthText: true },
+      ],
     },
     mh_selected_suicide_attempt: {
       label: "Selected Condition: Suicide Attempt",
       kind: "boolean",
       risk: "true",
+      when: [
+        { section: "mentalHealth", field: "mh_history_current_treatment", equals: true },
+        { section: "mentalHealth", field: "mh_selected_conditions", nonempty: true },
+        { section: "mentalHealth", field: "mh_conditions", mentalHealthText: true },
+      ],
     },
     mh_selected_suicide_attempt_details: {
       label: "Selected Condition: Suicide Attempt Details",
@@ -785,6 +794,11 @@ export const FIELD_REGISTRY = {
       label: "Selected Condition: Disability",
       kind: "boolean",
       risk: "true",
+      when: [
+        { section: "mentalHealth", field: "mh_history_current_treatment", equals: true },
+        { section: "mentalHealth", field: "mh_selected_conditions", nonempty: true },
+        { section: "mentalHealth", field: "mh_conditions", mentalHealthText: true },
+      ],
     },
     mh_selected_disability_details: {
       label: "Selected Condition: Disability Details",
@@ -1332,7 +1346,8 @@ export const FIELD_REGISTRY = {
       when: [{ section: "residencyTravel", field: "res_citizen_or_resident", equals: "Other" }],
     },
     res_high_risk_countries_2y: {
-      label: "High-Risk Country Travel in Past 2 Years",
+      label:
+        "Next 2 Yr: Intended Extended Work, Travel, or Residence in Listed High-Risk Countries / Outside U.S.",
       kind: "boolean",
       risk: "true",
     },
@@ -1343,7 +1358,7 @@ export const FIELD_REGISTRY = {
       when: [{ section: "residencyTravel", field: "res_high_risk_countries_2y", equals: true }],
     },
     res_travel_outside_us_24m: {
-      label: "Travel Outside U.S. in Past 24 Months",
+      label: "Next 24 Mo: Intended Work, Travel, or Residence Outside U.S. for More Than 30 Days",
       kind: "boolean",
       risk: "true",
     },
@@ -1364,6 +1379,8 @@ export const FIELD_REGISTRY = {
       kind: "boolean",
       risk: "true",
     },
+    // Explicit user requirement: annotate populated general travel text when both future toggles are No.
+    // It may legitimately describe history, so show a context note and never infer a contradiction or add a risk flag.
     res_foreign_travel_details: {
       label: "Foreign Travel / Residency Details",
       kind: "string",
@@ -1464,9 +1481,10 @@ export const FIELD_REGISTRY = {
     seizure_hospital_visits: { label: "Seizure Hospital Visits", kind: "string", risk: "none" },
     seizure_pending_tests: { label: "Pending Seizure Tests", kind: "string", risk: "none" },
     seizure_classification_simple_partial_check: {
-      label: "Simple Partial Seizure Classification Check",
+      label: "Partial / Absence: Seizure-Free for 2+ Years Without Loss of Consciousness",
       kind: "boolean",
-      risk: "none",
+      risk: "false",
+      flagLabel: "Does NOT Meet the Stated Partial / Absence Seizure-Control Check",
     },
     seizure_classification_epilepsy_control: {
       label: "Epilepsy Classification and Control",
@@ -2445,6 +2463,7 @@ export interface TriggeredFlag {
   value: unknown;
   displayValue: string;
   note?: string;
+  explanation?: string;
 }
 export interface FormattedApplicationEmail {
   subject: string;
@@ -2487,7 +2506,8 @@ export function formatCurrency(value: unknown): string {
     ? new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
-        maximumFractionDigits: 0,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
       }).format(value)
     : "Not Provided";
 }
@@ -2552,8 +2572,30 @@ function categoryLabel(category: TriggeredFlag["category"]): string {
       ? "Additional Disclosures"
       : CATEGORY_LABELS[category];
 }
+// Keep this trigger vocabulary in parity with the production schema and visible MH detail panel.
+const MENTAL_HEALTH_TRIGGER_WORDS = [
+  "anxiety",
+  "depression",
+  "eating disorder",
+  "suicid",
+  "adjustment",
+  "schizophrenia",
+  "mental retardation",
+  "ocd",
+  "panic",
+  "bipolar",
+  "ptsd",
+  "adhd",
+  "add",
+  "tourette",
+];
 function parentMatches(input: Record<string, unknown>, p: ParentCondition): boolean {
   const value = object(input[p.section])[p.field];
+  if (p.mentalHealthText)
+    return (
+      typeof value === "string" &&
+      MENTAL_HEALTH_TRIGGER_WORDS.some((word) => value.toLowerCase().includes(word))
+    );
   if (p.nonempty) return Array.isArray(value) && value.length > 0;
   return p.includes !== undefined
     ? Array.isArray(value) && value.includes(p.includes)
@@ -2662,7 +2704,8 @@ export function preserveEmailDisclosures<T extends ApplicationInput>(
         validatedField && !restoreArray ? existing[key] : supplied[key],
         rule,
       );
-      if (value !== undefined && (validatedField || populated(value))) target[key] = value;
+      if (value !== undefined && (validatedField || populated(value) || typeof value === "boolean"))
+        target[key] = value;
     }
     if (Object.keys(target).length) result[section] = target;
   }
@@ -2694,10 +2737,10 @@ const styles = {
 };
 function itemHtml(item: TriggeredFlag): string {
   const raw = JSON.stringify(item.value) ?? "undefined";
-  return `<div style="margin:10px 0;overflow-wrap:anywhere;word-break:break-word;"><strong>${escapeHtml(item.label)}</strong>: ${escapeHtml(item.displayValue).replace(/\n/g, "<br>")}${item.note ? `<br><span style="color:#854d0e;font-size:12px;">${escapeHtml(item.note)}</span>` : ""}<br><code style="${styles.code}">${escapeHtml(item.key)}: ${escapeHtml(raw)}</code></div>`;
+  return `<div style="margin:10px 0;overflow-wrap:anywhere;word-break:break-word;"><strong>${escapeHtml(item.label)}</strong>: ${escapeHtml(item.displayValue).replace(/\n/g, "<br>")}${item.note ? `<br><span style="color:#854d0e;font-size:12px;">${escapeHtml(item.note)}</span>` : ""}${item.explanation ? `<br><span style="color:#475569;font-size:12px;">${escapeHtml(item.explanation)}</span>` : ""}<br><code style="${styles.code}">${escapeHtml(item.key)}: ${escapeHtml(raw)}</code></div>`;
 }
 function itemText(item: TriggeredFlag): string {
-  return `- ${item.label}: ${item.displayValue}${item.note ? ` ${item.note}` : ""}\n  ${item.key}: ${JSON.stringify(item.value) ?? "undefined"}`;
+  return `- ${item.label}: ${item.displayValue}${item.note ? ` ${item.note}` : ""}${item.explanation ? `\n  ${item.explanation}` : ""}\n  ${item.key}: ${JSON.stringify(item.value) ?? "undefined"}`;
 }
 /** Pure, dependency-free formatter. The sender must still enforce validation and both consents. */
 export function formatApplicationEmail(
@@ -2725,12 +2768,12 @@ export function formatApplicationEmail(
       const value = values[key];
       const localNote = parentNote(input, rule);
       const note =
-        !active && populated(value)
+        !active && (populated(value) || (value === false && rule.risk === "false"))
           ? "[Note: Populated while condition follow-up is inactive]"
           : localNote;
       const contextActive = active && !localNote;
       const consent = section === "consents";
-      const risk =
+      const rawRisk =
         rule.risk === "true"
           ? value === true
           : rule.risk === "false"
@@ -2747,12 +2790,12 @@ export function formatApplicationEmail(
                     "Permanent Resident (Green Card)",
                   ].includes(value)
                 : false;
+      const risk = rawRisk && (consent || contextActive);
       if (
         category !== "consents" &&
         category !== "other" &&
         rule.risk !== "none" &&
-        active &&
-        (!rule.when || contextActive || risk)
+        contextActive
       ) {
         // Optional follow-ups are counted only when answered or their parent is active.
         if (
@@ -2765,7 +2808,7 @@ export function formatApplicationEmail(
           else if (!risk) stats[category].clear++;
         }
       }
-      const hasDisclosure = populated(value);
+      const hasDisclosure = populated(value) || (value === false && rule.risk === "false");
       if (risk || (hasDisclosure && note)) {
         const isMissingConsent = consent && value !== true;
         flags.push({
@@ -2777,10 +2820,16 @@ export function formatApplicationEmail(
           value: value === undefined ? null : value,
           displayValue: isMissingConsent
             ? "Missing"
-            : rule.risk === "false" && value === false
+            : risk && rule.risk === "false" && value === false
               ? "No (Flag)"
               : display(value),
           ...(note ? { note } : {}),
+          ...(key === "res_foreign_travel_details" && note === ORPHAN_BADGE
+            ? {
+                explanation:
+                  "This general field can contain historical travel. No to future travel does not by itself establish a contradiction; this note does not increase the underwriting flag count.",
+              }
+            : {}),
         });
       } else if (
         hasDisclosure &&
@@ -2921,7 +2970,7 @@ export function formatApplicationEmail(
     delete (auditPayload.residencyTravel as unknown as Record<string, unknown>)
       .res_green_card_or_visa_id;
   const raw = JSON.stringify(auditPayload, null, 2);
-  const html = `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Practice Application Summary</title></head><body style="${styles.page}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:760px;table-layout:fixed;"><tr><td><div style="padding:18px;background:#142d4e;color:#ffffff;border-radius:8px;"><h1 style="font-size:22px;margin:0 0 8px;">Practice Life Insurance Application — Triage Summary</h1><strong>${DISCLOSURE}</strong><p style="margin:8px 0 0;">Received: ${escapeHtml(stamp.central)}<br><span style="font-family:monospace;font-size:12px;">UTC: ${escapeHtml(stamp.utc)}</span></p></div><div style="${styles.card}"><h2 style="font-size:18px;margin:0 0 8px;">Applicant &amp; Contact Profile</h2><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="table-layout:fixed;">${profileRows}</table></div><div style="${styles.card}background:${flagCount ? "#fff1f2" : "#f0fdf4"};border-color:${flagCount ? "#fda4af" : "#86efac"};"><h2 style="font-size:18px;margin:0 0 8px;">A — ⚠️ Underwriting Flags &amp; Disclosed Details</h2><strong>${escapeHtml(banner)}</strong>${noteCount ? `<p style="margin:8px 0;">ℹ️ ${noteCount} disclosed / inconsistent note(s) also require review.</p>` : ""}${flagsHtml || "<p>No additional details disclosed.</p>"}</div><div style="${styles.card}"><h2 style="font-size:18px;margin:0 0 8px;">B — ✅ All-Clear Categories &amp; Full Section Breakdown</h2><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${breakdownHtml}</table></div><div style="${styles.card}"><h2 style="font-size:18px;margin:0 0 8px;">C — Raw Payload</h2><p style="font-size:12px;color:#64748b;">Some email readers show this audit block expanded. The plain-text version also contains the complete payload.</p><details><summary style="font-weight:bold;cursor:pointer;">View Raw JSON Payload</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font-size:11px;">${escapeHtml(raw)}</pre></details></div></td></tr></table></td></tr></table></body></html>`;
-  const text = `Practice Life Insurance Application — Triage Summary\n${DISCLOSURE}\nReceived: ${stamp.central}\nUTC: ${stamp.utc}\n\nAPPLICANT & CONTACT PROFILE\n${profile.map(([k, v]) => `${k}: ${v}`).join("\n")}\n\nA — UNDERWRITING FLAGS & DISCLOSED DETAILS\n${banner}${noteCount ? `\n${noteCount} disclosed / inconsistent note(s) also require review.` : ""}\n${flagsText || "No additional details disclosed.\n"}\nB — ALL-CLEAR CATEGORIES & FULL SECTION BREAKDOWN\n${breakdownText}\nC — AUDIT\nView Raw JSON Payload\n${raw}\n`;
+  const html = `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Practice Application Summary</title></head><body style="${styles.page}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:760px;table-layout:fixed;"><tr><td><div style="padding:18px;background:#142d4e;color:#ffffff;border-radius:8px;"><h1 style="font-size:22px;margin:0 0 8px;">Practice Life Insurance Application — Triage Summary</h1><strong>${DISCLOSURE}</strong><p style="margin:8px 0 0;">Received: ${escapeHtml(stamp.central)}<br><span style="font-family:monospace;font-size:12px;">UTC: ${escapeHtml(stamp.utc)}</span></p></div><div style="${styles.card}"><h2 style="font-size:18px;margin:0 0 8px;">Applicant &amp; Contact Profile</h2><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="table-layout:fixed;">${profileRows}</table></div><div style="${styles.card}background:${flagCount ? "#fff1f2" : "#f0fdf4"};border-color:${flagCount ? "#fda4af" : "#86efac"};"><h2 style="font-size:18px;margin:0 0 8px;">A — ⚠️ Underwriting Flags &amp; Disclosed Details</h2><strong>${escapeHtml(banner)}</strong>${noteCount ? `<p style="margin:8px 0;">ℹ️ ${noteCount} disclosed / context note(s) also require review.</p>` : ""}${flagsHtml || "<p>No additional details disclosed.</p>"}</div><div style="${styles.card}"><h2 style="font-size:18px;margin:0 0 8px;">B — ✅ All-Clear Categories &amp; Full Section Breakdown</h2><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${breakdownHtml}</table></div><div style="${styles.card}"><h2 style="font-size:18px;margin:0 0 8px;">C — Raw Payload</h2><p style="font-size:12px;color:#64748b;">Some email readers show this audit block expanded. The plain-text version also contains the complete payload.</p><details><summary style="font-weight:bold;cursor:pointer;">View Raw JSON Payload</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font-size:11px;">${escapeHtml(raw)}</pre></details></div></td></tr></table></td></tr></table></body></html>`;
+  const text = `Practice Life Insurance Application — Triage Summary\n${DISCLOSURE}\nReceived: ${stamp.central}\nUTC: ${stamp.utc}\n\nAPPLICANT & CONTACT PROFILE\n${profile.map(([k, v]) => `${k}: ${v}`).join("\n")}\n\nA — UNDERWRITING FLAGS & DISCLOSED DETAILS\n${banner}${noteCount ? `\n${noteCount} disclosed / context note(s) also require review.` : ""}\n${flagsText || "No additional details disclosed.\n"}\nB — ALL-CLEAR CATEGORIES & FULL SECTION BREAKDOWN\n${breakdownText}\nC — AUDIT\nView Raw JSON Payload\n${raw}\n`;
   return { subject, html, text, flagCount, flags };
 }

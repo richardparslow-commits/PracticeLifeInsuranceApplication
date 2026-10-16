@@ -152,7 +152,7 @@ describe("disclosures and all-clear layout", () => {
     app.riskyBehavior!.dive_certification_date = "2024-01-01";
     const result = formatApplicationEmail(app, receivedAt);
     expect(result.flags).toContainEqual(
-      expect.objectContaining({ key: "nic_products", kind: "flag", note: ORPHAN_BADGE }),
+      expect.objectContaining({ key: "nic_products", kind: "note", note: ORPHAN_BADGE }),
     );
     expect(result.flags).toContainEqual(
       expect.objectContaining({
@@ -248,6 +248,7 @@ describe("escaping, profile, dates, subject, and audit", () => {
         .querySelectorAll("a"),
     ).toHaveLength(0);
     expect(formatCurrency(0)).toBe("$0");
+    expect(formatCurrency(50000.25)).toBe("$50,000.25");
     expect(formatPhone("+44 123456789")).toBe("+44 123456789");
   });
   it("uses Central Time including DST and a raw UTC ISO timestamp", () => {
@@ -310,5 +311,118 @@ describe("preserving known child disclosures across validation pruning", () => {
         residencyTravel: { res_travel_outside_us_details: { secret: "bad type" } },
       }),
     ).toThrow(/Invalid disclosed/);
+  });
+});
+
+describe("reviewed underwriting context and retained negative disclosures", () => {
+  it.each([
+    ["hypertensionModule", "htn_compliant"],
+    ["bankruptcy", "bk_discharged"],
+    ["riskyBehavior", "dive_certified"],
+  ] as const)("retains inactive false %s.%s in both the summary note and audit", (section, key) => {
+    const validated = clear();
+    const original = structuredClone(validated);
+    Object.assign(original, { [section]: { ...original[section], [key]: false } });
+    const restored = preserveEmailDisclosures(validated, original);
+    expect((restored[section] as Record<string, unknown>)[key]).toBe(false);
+    const result = formatApplicationEmail(restored, receivedAt);
+    expect(result.flags).toContainEqual(
+      expect.objectContaining({ key, kind: "note", value: false }),
+    );
+    expect(result.flags.some((f) => f.key === key && f.kind === "flag")).toBe(false);
+    expect(JSON.parse(result.text.split("View Raw JSON Payload\n")[1])[section][key]).toBe(false);
+  });
+  it("flags an unfavorable active seizure-control check and retains it as a note if deselected", () => {
+    const app = clear();
+    app.healthMedical!.conditions_triggered = ["Seizures"];
+    app.seizureModule = { seizure_classification_simple_partial_check: false };
+    let result = formatApplicationEmail(app, receivedAt);
+    expect(result.flags).toContainEqual(
+      expect.objectContaining({
+        key: "seizure_classification_simple_partial_check",
+        kind: "flag",
+        displayValue: "No (Flag)",
+      }),
+    );
+    app.seizureModule.seizure_classification_simple_partial_check = true;
+    expect(
+      formatApplicationEmail(app, receivedAt).flags.some(
+        (f) => f.key === "seizure_classification_simple_partial_check",
+      ),
+    ).toBe(false);
+    app.seizureModule.seizure_classification_simple_partial_check = false;
+    app.healthMedical!.conditions_triggered = [];
+    result = formatApplicationEmail(app, receivedAt);
+    expect(result.flags).toContainEqual(
+      expect.objectContaining({
+        key: "seizure_classification_simple_partial_check",
+        kind: "note",
+        value: false,
+      }),
+    );
+  });
+  it.each(["selected", "text"])("honors the independent %s mental-health trigger", (trigger) => {
+    const app = clear();
+    app.mentalHealth!.mh_history_current_treatment = false;
+    if (trigger === "selected") app.mentalHealth!.mh_selected_conditions = ["Tourette’s syndrome"];
+    else app.mentalHealth!.mh_conditions = "Tourette syndrome";
+    Object.assign(app.mentalHealth!, {
+      mh_medications: "Synthetic medication",
+      mh_dx_date: "2020-01-01",
+      mh_last_seen: "2026-01-01",
+      mh_rx_details: "Synthetic prescription",
+      mh_selected_dx_date: "2020-01-01",
+      mh_selected_last_seen: "2026-01-01",
+      mh_selected_psychiatrist_5y: true,
+    });
+    const result = formatApplicationEmail(app, receivedAt);
+    expect(result.flags).toContainEqual(
+      expect.objectContaining({ key: "mh_selected_psychiatrist_5y", kind: "flag" }),
+    );
+    expect(result.flags.filter((f) => f.section === "mentalHealth").every((f) => !f.note)).toBe(
+      true,
+    );
+    expect(summary(result.html)).toContain("Synthetic medication");
+  });
+  it("does not count stale selected-condition Yes as active risk or No as clear", () => {
+    const app = clear();
+    app.mentalHealth!.mh_selected_psychiatrist_5y = true;
+    app.mentalHealth!.mh_selected_inpatient_5y = false;
+    const result = formatApplicationEmail(app, receivedAt);
+    expect(result.flagCount).toBe(0);
+    expect(result.flags).toContainEqual(
+      expect.objectContaining({ key: "mh_selected_psychiatrist_5y", kind: "note" }),
+    );
+    expect(summary(result.html)).toContain("(0/9 flags)");
+    expect(
+      JSON.parse(result.text.split("View Raw JSON Payload\n")[1]).mentalHealth
+        .mh_selected_inpatient_5y,
+    ).toBe(false);
+  });
+  it("labels travel as future intent while retaining the explicitly requested historical context note", () => {
+    const app = clear();
+    app.residencyTravel!.res_high_risk_countries_2y = true;
+    app.residencyTravel!.res_travel_outside_us_24m = true;
+    let result = formatApplicationEmail(app, receivedAt);
+    expect(result.flags.find((f) => f.key === "res_high_risk_countries_2y")?.label).toContain(
+      "Next 2 Yr",
+    );
+    expect(result.flags.find((f) => f.key === "res_travel_outside_us_24m")?.label).toContain(
+      "Next 24 Mo",
+    );
+    app.residencyTravel!.res_high_risk_countries_2y = false;
+    app.residencyTravel!.res_travel_outside_us_24m = false;
+    app.residencyTravel!.res_foreign_travel_details =
+      "A historical trip, no future travel intended";
+    result = formatApplicationEmail(app, receivedAt);
+    expect(result.flagCount).toBe(0);
+    expect(result.flags).toContainEqual(
+      expect.objectContaining({
+        key: "res_foreign_travel_details",
+        kind: "note",
+        note: ORPHAN_BADGE,
+      }),
+    );
+    expect(result.text).toContain("does not by itself establish a contradiction");
   });
 });
