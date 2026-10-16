@@ -48,6 +48,7 @@ import { cn } from "@/lib/utils";
 import { preserveEmailDisclosures } from "@/lib/formatApplicationEmail";
 import {
   DRAFT_KEY,
+  moduleConditions,
   draftSnapshotForStorage,
   prepareApplication,
   sanitizeResidency,
@@ -143,7 +144,9 @@ function loadDraft() {
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) return empty;
     const sanitized = sanitizeResidency(raw);
     const cleanedDraft =
-      JSON.stringify(raw) === JSON.stringify(sanitized) ? null : JSON.stringify(sanitized);
+      JSON.stringify(raw) === JSON.stringify(sanitized)
+        ? null
+        : JSON.stringify(sanitized);
     const result = practiceApplicationDraftSchema.safeParse(sanitized);
     return {
       answers: result.success
@@ -188,11 +191,15 @@ function sectionForPath(path: string) {
 /** Consent + contact answers live outside the 12 sections, in their own block. */
 const CONTACT_BUCKET = { id: "contact", title: "Send a copy & consent" };
 /** Flatten react-hook-form's nested error object into dotted field paths. */
-function collectErrorPaths(errors: Record<string, unknown>, prefix = ""): string[] {
+function collectErrorPaths(
+  errors: Record<string, unknown>,
+  prefix = "",
+): string[] {
   return Object.entries(errors).flatMap(([key, value]) => {
     const path = prefix ? `${prefix}.${key}` : key;
     if (!value || typeof value !== "object") return [];
-    if (typeof (value as { message?: unknown }).message === "string") return [path];
+    if (typeof (value as { message?: unknown }).message === "string")
+      return [path];
     return collectErrorPaths(value as Record<string, unknown>, path);
   });
 }
@@ -217,7 +224,9 @@ function summarizeErrors(paths: string[]) {
   const order = [...SECTIONS.map((section) => section.id), CONTACT_BUCKET.id];
   return {
     total: paths.length,
-    rows: [...rows.values()].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id)),
+    rows: [...rows.values()].sort(
+      (a, b) => order.indexOf(a.id) - order.indexOf(b.id),
+    ),
   };
 }
 /** Map a blurred control back to its field path (both radio halves share one). */
@@ -241,7 +250,10 @@ export default function PracticeApplicationForm() {
     />
   );
 }
-function Worksheet({ cleared, onClear }: {
+function Worksheet({
+  cleared,
+  onClear,
+}: {
   cleared: boolean;
   onClear: () => void;
 }) {
@@ -255,16 +267,30 @@ function Worksheet({ cleared, onClear }: {
     reValidateMode: "onChange",
     shouldUnregister: false,
   });
-  const { control, setError, clearErrors, getValues, reset } = methods;
+  const {
+    control,
+    setError,
+    clearErrors,
+    getValues,
+    reset,
+    unregister,
+    setValue,
+  } = methods;
   const { isDirty } = methods.formState;
   const all = useWatch({ control });
   const [open, setOpen] = useState<string[]>(["health"]);
+  const [sectionVersions, setSectionVersions] = useState<
+    Record<string, number>
+  >({});
+  const [resetNotice, setResetNotice] = useState<string | null>(null);
   const [attempted, setAttempted] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [banner, setBanner] = useState<string | null>(null);
   const [cleanupWarning, setCleanupWarning] = useState<string | null>(null);
-  const [draftStatus, setDraftStatus] = useState(cleared ? "Draft cleared." : "");
+  const [draftStatus, setDraftStatus] = useState(
+    cleared ? "Draft cleared." : "",
+  );
   useEffect(() => {
     if (restored.cleanedDraft === null) return;
     try {
@@ -284,6 +310,8 @@ function Worksheet({ cleared, onClear }: {
   /** Field paths the user has already left, tracked independently of the library. */
   const visited = useRef<Set<string>>(new Set());
   const attemptedRef = useRef(false);
+  // A reset section starts untouched, even after an earlier submission attempt.
+  const resetValidation = useRef(new Set<string>());
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -292,7 +320,10 @@ function Worksheet({ cleared, onClear }: {
     };
   }, []);
   const consents = all?.consents ?? {};
-  const missing = attempted ? getMissingConsents(consents) : [];
+  const missing =
+    attempted && !resetValidation.current.has("consents")
+      ? getMissingConsents(consents)
+      : [];
   const saveDraft = (manual = false) => {
     if (sentRef.current) return;
     try {
@@ -343,7 +374,10 @@ function Worksheet({ cleared, onClear }: {
     const occurred = inlineManaged.current;
     const next = new Set<string>();
     if (!parsed.success) {
-      const touched = methods.formState.touchedFields as Record<string, unknown>;
+      const touched = methods.formState.touchedFields as Record<
+        string,
+        unknown
+      >;
       const isTouched = (issuePath: (string | number)[]) => {
         let node: unknown = touched;
         for (const key of issuePath) {
@@ -356,7 +390,11 @@ function Worksheet({ cleared, onClear }: {
         const top = String(issue.path[0] ?? "");
         if (top === "consents" || top === "optionalContact") continue;
         const path = issue.path.join(".");
-        if (!attemptedRef.current && !isTouched(issue.path) && !visited.current.has(path))
+        if (
+          (!attemptedRef.current || resetValidation.current.has(top)) &&
+          !isTouched(issue.path) &&
+          !visited.current.has(path)
+        )
           continue;
         next.add(path);
         setError(path, { message: issue.message });
@@ -376,6 +414,61 @@ function Worksheet({ cleared, onClear }: {
     const path = pathFromTarget(event.target);
     if (path) visited.current.add(path);
     applyAnswerErrors();
+  }
+  function resetSection(id: string, title: string, prefixes: string[]) {
+    if (sendingRef.current || sentRef.current) return;
+    if (
+      !window.confirm(
+        `Reset only ${title}? Its answers and follow-up details will be cleared. All other sections will be kept.`,
+      )
+    )
+      return;
+    try {
+      // Remove these roots from the existing snapshot first. Even if another
+      // unfinished answer cannot be saved, a reset must not restore old data.
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (saved !== null) {
+        const draft = JSON.parse(saved);
+        if (!draft || typeof draft !== "object" || Array.isArray(draft))
+          throw new Error("Invalid draft");
+        for (const prefix of prefixes) delete draft[prefix];
+        delete draft.consents;
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+      }
+    } catch {
+      setBanner(
+        `This browser could not reset the saved answers for ${title}. Your answers have been kept. Please try again.`,
+      );
+      return;
+    }
+    // Unregister also removes hidden values, restored defaults, touched state
+    // and errors. Remount only this section's controls so old DOM/array values
+    // cannot reappear; the other sections keep their values and field state.
+    unregister(prefixes);
+    for (const prefix of prefixes) {
+      resetValidation.current.add(prefix);
+      if (EMPTY[prefix])
+        setValue(prefix, structuredClone(EMPTY[prefix]), { shouldDirty: true });
+    }
+    const belongs = (path: string) =>
+      prefixes.some(
+        (prefix) => path === prefix || path.startsWith(`${prefix}.`),
+      );
+    visited.current = new Set(
+      [...visited.current].filter((path) => !belongs(path)),
+    );
+    inlineManaged.current = new Set(
+      [...inlineManaged.current].filter((path) => !belongs(path)),
+    );
+    clearErrors(prefixes);
+    hasEdited.current = true;
+    setSectionVersions((previous) => ({
+      ...previous,
+      [id]: (previous[id] ?? 0) + 1,
+    }));
+    setBanner(null);
+    setResetNotice(`${title} reset. All other sections have been kept.`);
+    saveDraft();
   }
   function deleteSubmittedDraft(retry = false) {
     let warning: string | null = null;
@@ -408,6 +501,8 @@ function Worksheet({ cleared, onClear }: {
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (sendingRef.current) return;
+    resetValidation.current.clear();
+    setResetNotice(null);
     attemptedRef.current = true;
     setAttempted(true);
     clearErrors();
@@ -492,8 +587,8 @@ function Worksheet({ cleared, onClear }: {
           <AlertTitle>Sent — thank you!</AlertTitle>
           <AlertDescription>
             <p>
-              Your practice worksheet was accepted by the email service for delivery
-              to Richard. This does not create insurance coverage.
+              Your practice worksheet was accepted by the email service for
+              delivery to Richard. This does not create insurance coverage.
             </p>
             {!cleanupWarning && (
               <p className="mt-3">Saved draft removed from this browser.</p>
@@ -506,8 +601,9 @@ function Worksheet({ cleared, onClear }: {
             <AlertDescription>
               <p>{cleanupWarning}</p>
               <p className="mt-2">
-                Your saved health and financial answers may still be on this device.
-                Retry deleting the saved draft. This will not resend your worksheet.
+                Your saved health and financial answers may still be on this
+                device. Retry deleting the saved draft. This will not resend
+                your worksheet.
               </p>
               <Button
                 type="button"
@@ -571,6 +667,11 @@ function Worksheet({ cleared, onClear }: {
             {draftStatus}
           </p>
         </div>
+        {resetNotice && (
+          <p role="status" className="no-print text-sm">
+            {resetNotice}
+          </p>
+        )}
         {banner && (
           <Alert variant="destructive" role="alert" aria-live="assertive">
             <AlertTitle>Check your worksheet</AlertTitle>
@@ -633,12 +734,50 @@ function Worksheet({ cleared, onClear }: {
                 <AccordionTrigger className="text-left text-base font-semibold">
                   {s.title}
                 </AccordionTrigger>
-                <AccordionContent className="pt-3">{s.node}</AccordionContent>
+                <AccordionContent className="pt-3">
+                  <div className="no-print mb-4 flex justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={sending}
+                      aria-label={`Reset ${s.title}`}
+                      onClick={() =>
+                        resetSection(
+                          s.id,
+                          s.title,
+                          s.id === "health"
+                            ? [s.prefix, ...Object.keys(moduleConditions)]
+                            : [s.prefix],
+                        )
+                      }
+                    >
+                      Reset section
+                    </Button>
+                  </div>
+                  <div key={sectionVersions[s.id] ?? 0}>{s.node}</div>
+                </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
           <div className="mt-8 rounded-xl border bg-card p-4 sm:p-6">
+            <div className="no-print mb-4 flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={sending}
+                aria-label="Reset contact details and consents"
+                onClick={() =>
+                  resetSection("contact", "Contact details and consents", [
+                    "optionalContact",
+                    "consents",
+                  ])
+                }
+              >
+                Reset section
+              </Button>
+            </div>
             <ConsentSection
+              key={sectionVersions.contact ?? 0}
               missing={missing}
               errors={
                 {
