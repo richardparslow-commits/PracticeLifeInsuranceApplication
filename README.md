@@ -13,28 +13,17 @@ npm test -- --maxWorkers=1
 
 The dependency lockfile uses the official WebAssembly distributions of esbuild and Rollup, because this development machine blocked downloaded native executables. They provide the same build APIs without changing OS security settings. The project .npmrc omits optional native packages, including the macOS file watcher; Vite uses its standard non-native fallback. Zod is pinned to the compatible 3.x API used by the supplied schema.
 
-## Add to the existing Lovable project
+## Published website integration
 
-This repository replaces the earlier flat-field prototype with the supplied nested schema and full submission flow. The earlier prototype remains available in Git history. Your existing Lovable website currently syncs with `richardparslow-commits/life-policy-light`, a separate repository. Updating this repository alone does not update that Lovable project or publish the website.
+The full worksheet is integrated and published at [lifeinsurancebrokeradvocate.com/practice-application](https://lifeinsurancebrokeradvocate.com/practice-application). That Lovable project, Policy Compass, syncs with `richardparslow-commits/life-policy-light`, a separate repository. Updating this standalone repository alone does not publish the website.
 
-Copy `src/components/PracticeApplicationForm.tsx`, `src/components/form/`, `src/lib/practiceApplication.schema.ts`, and `src/lib/prepareApplication.ts` into the matching project directories. Merge the app-specific theme/consent CSS from `src/index.css` into the existing stylesheet. Use existing shadcn components if already installed; the generated `src/components/ui/` directory is included for a standalone build.
+The website keeps its own TanStack router and submits to its native `/api/public/practice-application` route. That route runs the shared validator and sends through the website's existing Gmail connection, using its server-only Lovable and Gmail keys. It does not create worksheet database records or submission logs. The standalone app in this repository still uses Supabase and the default Resend transport described below.
 
-Keep your existing application router, home page, and Supabase client. Add a page wrapper with the branded heading and return link shown in `src/main.tsx`, rendering `<PracticeApplicationForm />`, at `/practice-application`. The standalone `src/main.tsx` redirects unknown routes for convenience; do not replace your existing website entry point with it.
-
-Install missing dependencies:
-
-```sh
-npm i react-hook-form zod@3 @supabase/supabase-js
-npx shadcn@latest add input textarea label radio-group checkbox button accordion alert select card
-```
-
-If your project uses Zod 4 elsewhere, keep this exact schema on Zod 3 via an isolated dependency alias rather than changing its validation rules.
-
-Add a Tools card linking to `/practice-application`. This package has not been deployed to the live website.
+Keep the worksheet schema, preparation, and shared handler synchronized across repositories. When porting UI changes, preserve each application's transport: do not replace the website form or router wholesale with the standalone versions. The shared handler accepts a server-provided email delivery adapter while retaining Resend as its default. Consent text and fixed recipient are the same in both copies.
 
 ## Connect Supabase and Resend
 
-The standalone client reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (or `VITE_SUPABASE_ANON_KEY`). These public configuration values belong in `.env.local`; never put a Resend key in a `VITE_` variable. In Lovable, retain the existing configured Supabase client instead.
+The standalone client reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (or `VITE_SUPABASE_ANON_KEY`). These public configuration values belong in `.env.local`; never put a Resend key in a `VITE_` variable. The published website uses its native route and existing Gmail connection instead; these standalone settings do not apply to its mail transport.
 
 Copy `supabase/functions/send-practice-application/` and `supabase/functions/_shared/` into the connected Supabase project. `_shared/practiceApplication.schema.ts` is an exact copy of the supplied client schema; the handler imports and runs that schema again on the server. Keep its contents byte-identical when revising the source schema; deploy the function whenever server validation changes.
 
@@ -84,7 +73,7 @@ The remaining date rules use Date.parse and check age as a number; they do not e
 
 ## Deployment status
 
-Code and local tests are included. No production Supabase configuration or Resend credentials were supplied, so no live email or production deployment has been performed.
+The worksheet website is published from the separate life-policy-light repository. This standalone package has no separate production deployment or configured Supabase/Resend sender confirmed here. Its default email transport remains Resend; deploying that separate function and testing it is independent of publishing the website. Email-delivery tests in this repository use mocks.
 
 ## Residency privacy
 
