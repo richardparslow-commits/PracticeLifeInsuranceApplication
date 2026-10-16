@@ -705,12 +705,26 @@ function requireIf(
 /* DRAFT schema (lenient – used for save/resume and section navigation)       */
 /* -------------------------------------------------------------------------- */
 
+// Saving work in progress must not require a medication name yet. Reuse the
+// submitted row shapes so field types, length limits and unknown-key stripping
+// stay in place; the submission schemas above continue requiring names.
+const draftMedicationItemSchema = medicationItemSchema.extend({ name: optText });
+const draftDetailedMedicationItemSchema = detailedMedicationItemSchema.extend({ drugName: optText });
+
 export const practiceApplicationDraftSchema = z
   .object({
-    healthMedical: healthMedicalBase.partial(),
-    seizureModule: seizureModuleSchema.partial().optional(),
-    respiratoryModule: respiratoryModuleSchema.partial().optional(),
-    cardioNeuroModule: cardioNeuroModuleSchema.partial().optional(),
+    healthMedical: healthMedicalBase.extend({
+      medical_current_medications: z.array(draftMedicationItemSchema).default([]),
+    }).partial(),
+    seizureModule: seizureModuleSchema.extend({
+      seizure_medications: z.array(draftDetailedMedicationItemSchema).default([]),
+    }).partial().optional(),
+    respiratoryModule: respiratoryModuleSchema.extend({
+      resp_medications: z.array(draftDetailedMedicationItemSchema).default([]),
+    }).partial().optional(),
+    cardioNeuroModule: cardioNeuroModuleSchema.extend({
+      cardio_neuro_medications: z.array(draftDetailedMedicationItemSchema).default([]),
+    }).partial().optional(),
     hypertensionModule: z.record(z.any()).optional(),
     diabetesModule: z.record(z.any()).optional(),
     arthritisModule: z.record(z.any()).optional(),

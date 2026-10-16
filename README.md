@@ -53,11 +53,15 @@ Email API reference: https://resend.com/docs/api-reference/emails/send-email
 - First, the client checks both consents; missing boxes flash red/blue and show individual errors. Then the exact submit schema validates, each issue maps to a field, and the relevant accordion opens and scrolls to the first error.
 - Presentation-only pruning removes inactive modules and stale hidden companion answers before validation. A separate schema-whitelisted email snapshot preserves current populated child disclosures as explicit inconsistency notes, including arrays otherwise reset to defaults. Retired document IDs remain excluded. This does not replace or weaken the schema. Collapsing an accordion does not discard answers or exempt a section from validation.
 - Both consents must be literal `true` on the server, followed by full server schema validation. Malformed requests, missing secrets, validation failures, and email failures never produce a success state.
-- Autosave and Save draft use the supplied draft schema; consent values are excluded and always reset when restoring. Invalid/incomplete medication rows can prevent saving the latest edit until completed; the UI reports that case.
+- Autosave and Save draft use the draft schema; consent values are excluded and always reset when restoring. Blank or partially entered medication rows can be saved and restored, including dosage/frequency entered before a name. Draft-only row schemas keep field types, text limits and unknown-key stripping in the health, seizure, respiratory and cardio/neuro sections; submission still requires every retained medication row to have a name. The other medication modules retain their existing lenient draft behavior. Other invalid field values can still prevent saving, and the UI reports that case.
 - Successful email acceptance shows a thank-you and attempts to clear the saved draft. If deletion fails, the success screen warns that health and financial answers may remain on the device and offers Retry deleting saved draft. That button only retries local deletion; it never resends the worksheet. Successful cleanup shows its own confirmation. Failed or unconfirmed delivery preserves the draft. `tests/submission-draft-cleanup.test.tsx` covers these paths with mocked sending.
 - Sending saves the latest validated draft immediately and temporarily disables editing and draft actions. A failed send re-enables the same answers.
 - Clear draft deletes the saved copy and starts a fresh form, including collapsed sections and consent state. Autosave resumes after a new edit. If browser storage refuses deletion, the worksheet stays open and reports the failure.
 - Print / Save as PDF includes a readable JSON snapshot of the active answers; collapsed sections are included. The browser handles printing locally.
+
+## Medication draft saving
+
+Medication draft regression tests exercise all seven repeaters, blank-row preservation, partial-row round trips, strict submission rejection and no provider calls for invalid medication rows. Form tests verify autosave, manual saving, reopening simple/detailed rows, keeping other latest answers, fresh consents after restore, and correction before mocked delivery. This revision changes draft validation only; it does not prune unfinished rows from submission or weaken the submit schema.
 
 ## Source gaps handled
 
