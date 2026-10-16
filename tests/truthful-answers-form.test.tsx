@@ -37,6 +37,39 @@ async function consentAndSubmit() {
   await user.click(screen.getByRole("button", { name: "Submit / Contact Me" }));
 }
 
+
+it("keeps a saved age mismatch editable and blocks sending until Age is corrected", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-10-16T18:00:00Z"));
+  try {
+    const app = validApplication();
+    app.healthMedical.age = 45;
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(app));
+    invoke.mockResolvedValue({ data: { ok: false }, error: null });
+    const user = userEvent.setup();
+    render(<PracticeApplicationForm />);
+    expect(screen.getByLabelText("Age")).toHaveValue(45);
+    expect(screen.getByLabelText("Age")).toHaveAccessibleDescription(
+      "Enter completed years as of today (Central Time).",
+    );
+    await user.click(screen.getByRole("button", { name: "Save draft" }));
+    expect(JSON.parse(localStorage.getItem(DRAFT_KEY) ?? "null").healthMedical.age).toBe(45);
+    await consentAndSubmit();
+    expect(await screen.findByText("Age must match your date of birth as of today (Central Time).")).toBeInTheDocument();
+    expect(invoke).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Age")).toHaveAttribute("aria-invalid", "true");
+    await user.clear(screen.getByLabelText("Age"));
+    await user.type(screen.getByLabelText("Age"), "46");
+    await user.click(screen.getByRole("button", { name: "Submit / Contact Me" }));
+    await screen.findByText(/Sending could not be confirmed/);
+    expect(invoke).toHaveBeenCalledTimes(1);
+    expect(invoke.mock.calls[0][1].body.application.healthMedical.age).toBe(46);
+  } finally {
+    vi.useRealTimers();
+  }
+}, 15000);
+
+
 describe("truthful answers through the worksheet", () => {
   it("lets a never-user submit without inventing a date and preserves a stale disclosure for email review", async () => {
     const app = validApplication();
