@@ -3545,10 +3545,8 @@ const textOr = (v: unknown, fallback = "Not Provided") =>
 const styles = {
   page: "margin:0;padding:16px;background:#f1f5f9;color:#172033;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;",
   card: "padding:16px;margin:16px 0;border:1px solid #cbd5e1;border-radius:8px;background:#ffffff;",
-  table: "width:100%;table-layout:fixed;border-collapse:collapse;",
-  cell: "padding:7px 8px;vertical-align:top;border-bottom:1px solid #e2e8f0;overflow-wrap:anywhere;word-break:break-word;",
-  summaryCell:
-    "padding:3px 8px;vertical-align:top;border-bottom:1px solid #e2e8f0;overflow-wrap:anywhere;word-break:break-word;",
+  table:
+    "width:100%;table-layout:fixed;border-collapse:collapse;overflow-wrap:anywhere;word-break:break-word;",
   heading: "font-size:18px;margin:0 0 10px;break-after:avoid;page-break-after:avoid;",
 };
 function medicationAnswers(value: unknown): string[] {
@@ -3636,7 +3634,7 @@ export function formatApplicationEmail(
   }
   const stamp = formatReceivedAt(receivedAt);
   const flags: TriggeredFlag[] = [];
-  const details: TriggeredFlag[] = [];
+  const medicationDetails: TriggeredFlag[] = [];
   const summaryAnswers: SummaryAnswer[] = [];
   const stats = Object.fromEntries(
     CATEGORY_ORDER.map((c) => [c, { total: 0, clear: 0, missing: 0 }]),
@@ -3729,22 +3727,8 @@ export function formatApplicationEmail(
               }
             : {}),
         });
-      } else if (
-        hasDisclosure &&
-        section !== "optionalContact" &&
-        section !== "consents" &&
-        ![
-          "dob",
-          "age",
-          "stateOfBirth",
-          "genderSex",
-          "res_citizen_or_resident",
-          "occ_current_occupation",
-          "occ_annual_salary",
-        ].includes(key) &&
-        (rule.kind !== "boolean" || rule.risk === "none")
-      ) {
-        details.push({
+      } else if (hasDisclosure && rule.kind === "detailedMedications") {
+        medicationDetails.push({
           kind: "note",
           category,
           section,
@@ -3843,7 +3827,9 @@ export function formatApplicationEmail(
   const noteBanner = noteCount
     ? `${noteCount} Disclosed Context Note${noteCount === 1 ? "" : "s"}`
     : "";
-  const allItems = [...flags, ...details];
+  // Routine follow-up answers are shown once in Section B. Section A is
+  // reserved for triggered rules, medication disclosures and explicit notes.
+  const allItems = [...flags, ...medicationDetails];
   const groups = [...CATEGORY_ORDER, "consents", "other"] as const;
   const moduleTitles: Partial<Record<Section, string>> = {
     seizureModule: "Seizure Disorder",
@@ -3866,21 +3852,21 @@ export function formatApplicationEmail(
     .map(
       (
         item,
-      ) => `<tr style="break-inside:avoid;page-break-inside:avoid;background:${item.kind === "flag" ? "#fff7ed" : "#ffffff"};">
-    <td style="${styles.cell}">${escapeHtml(categoryLabel(item.category))}</td>
-    <td style="${styles.cell}">${contextHtml(item.section)}${escapeHtml(item.question)}</td>
-    <td style="${styles.cell}">${answerHtml(item)}</td>
-    <td style="${styles.cell}color:${item.kind === "flag" ? "#9a3412" : "#475569"};">${escapeHtml(item.note ?? item.underwritingStatus)}${item.explanation ? `<p style="font-size:11px;margin:5px 0 0;">${escapeHtml(item.explanation)}</p>` : ""}</td>
+      ) => `<tr valign="top" style="break-inside:avoid;border-bottom:1px solid #e2e8f0;background:${item.kind === "flag" ? "#fff7ed" : "#ffffff"};">
+    <td>${escapeHtml(categoryLabel(item.category))}</td>
+    <td>${contextHtml(item.section)}${escapeHtml(item.question)}</td>
+    <td>${answerHtml(item)}</td>
+    <td style="color:${item.kind === "flag" ? "#9a3412" : "#475569"};">${escapeHtml(item.note ?? item.underwritingStatus)}${item.explanation ? `<p style="font-size:11px;margin:5px 0 0;">${escapeHtml(item.explanation)}</p>` : ""}</td>
   </tr>`,
     )
     .join("");
   const flagsHtml = ordered.length
-    ? `<table aria-label="Underwriting flags and disclosed details" cellpadding="0" cellspacing="0" style="${styles.table}font-size:12px;line-height:1.4;">
+    ? `<table aria-label="Underwriting flags and disclosed details" cellpadding="7" cellspacing="0" style="${styles.table}font-size:12px;line-height:1.4;">
     <thead style="display:table-header-group;"><tr style="background:#e2e8f0;text-align:left;">
-      <th scope="col" width="17%" style="${styles.cell}">Category</th>
-      <th scope="col" width="35%" style="${styles.cell}">Question Asked</th>
-      <th scope="col" width="23%" style="${styles.cell}">Applicant's Answer</th>
-      <th scope="col" width="25%" style="${styles.cell}">Underwriting Takeaway</th>
+      <th scope="col" width="17%">Category</th>
+      <th scope="col" width="35%">Question Asked</th>
+      <th scope="col" width="23%">Applicant's Answer</th>
+      <th scope="col" width="25%">Underwriting Takeaway</th>
     </tr></thead><tbody>${flagRows}</tbody></table>`
     : "<p>No additional details disclosed.</p>";
   const flagsText = ordered
@@ -3905,14 +3891,20 @@ export function formatApplicationEmail(
           ? `ℹ️ ${CATEGORY_LABELS[category]} — No rule flags; ${notes} disclosed note(s) (0/${s.total} flags)`
           : `✅ ${CATEGORY_LABELS[category]} — All Clear (0/${s.total} flags)`;
     const answers = summaryAnswers.filter((answer) => answer.category === category);
+    let previousSection: string | undefined;
     const rows = answers
       .map((answer) => {
         const clear = typeof answer.value === "boolean" && answer.underwritingStatus === "CLEAR";
         const tag = answer.flagged ? " (Flag)" : clear ? " (Clear)" : "";
-        return `<tr style="break-inside:avoid;page-break-inside:avoid;${answer.flagged ? "background:#fff7ed;color:#7c2d12;" : "color:#475569;"}"><td width="72%" style="${styles.summaryCell}">${contextHtml(answer.section)}${escapeHtml(answer.question)}</td><td width="28%" style="${styles.summaryCell}">${answerHtml(answer)}${tag ? `<span style="font-weight:${answer.flagged ? "bold" : "normal"};">${escapeHtml(tag)}</span>` : ""}${answer.note ? `<div style="font-size:10px;color:#854d0e;margin-top:4px;">${escapeHtml(answer.note)}</div>` : ""}</td></tr>`;
+        const moduleHeading =
+          previousSection !== answer.section && moduleTitles[answer.section as Section]
+            ? `<tr><th colspan="2" align="left" style="background:#f1f5f9;">${escapeHtml(moduleTitles[answer.section as Section])}</th></tr>`
+            : "";
+        previousSection = answer.section;
+        return `${moduleHeading}<tr valign="top" style="break-inside:avoid;border-bottom:1px solid #e2e8f0;${answer.flagged ? "background:#fff7ed;color:#7c2d12;" : ""}"><td>${escapeHtml(answer.question)}</td><td>${answerHtml(answer)}${tag ? escapeHtml(tag) : ""}${answer.note ? `<div style="font-size:10px;color:#854d0e;">${escapeHtml(answer.note)}</div>` : ""}</td></tr>`;
       })
       .join("");
-    breakdownHtml += `<h3 style="font-size:14px;margin:16px 0 5px;padding:7px 8px;background:${triggered.length ? "#fff7ed" : s.missing || notes ? "#f1f5f9" : "#f0fdf4"};color:${triggered.length ? "#9a3412" : s.missing || notes ? "#475569" : "#166534"};break-after:avoid;page-break-after:avoid;">${escapeHtml(row)}</h3><table aria-label="${escapeHtml(CATEGORY_LABELS[category])} questions and answers" cellpadding="0" cellspacing="0" style="${styles.table}font-size:11px;line-height:1.35;"><thead style="display:table-header-group;"><tr style="text-align:left;background:#f8fafc;"><th scope="col" width="72%" style="${styles.summaryCell}">Question Asked</th><th scope="col" width="28%" style="${styles.summaryCell}">Applicant's Answer</th></tr></thead><tbody>${rows}</tbody></table>`;
+    breakdownHtml += `<h3 style="font-size:14px;margin:16px 0 5px;padding:7px 8px;background:${triggered.length ? "#fff7ed" : s.missing || notes ? "#f1f5f9" : "#f0fdf4"};color:${triggered.length ? "#9a3412" : s.missing || notes ? "#475569" : "#166534"};break-after:avoid;page-break-after:avoid;">${escapeHtml(row)}</h3><table aria-label="${escapeHtml(CATEGORY_LABELS[category])} questions and answers" cellpadding="3" cellspacing="0" style="${styles.table}font-size:11px;line-height:1.35;color:#475569;"><thead style="display:table-header-group;"><tr style="text-align:left;background:#f8fafc;"><th scope="col" width="72%">Question Asked</th><th scope="col" width="28%">Applicant's Answer</th></tr></thead><tbody>${rows}</tbody></table>`;
     breakdownText += `${row}\n${answers.map((answer) => `${moduleTitles[answer.section as Section] ? `${moduleTitles[answer.section as Section]} — ` : ""}${answer.question}\n  ${answerText(answer)}${answer.flagged ? " (Flag)" : typeof answer.value === "boolean" && answer.underwritingStatus === "CLEAR" ? " (Clear)" : ""}${answer.note ? `\n  ${answer.note}` : ""}`).join("\n")}\n\n`;
   }
   // Known privacy-retired field is removed even when this pure function is called directly.
