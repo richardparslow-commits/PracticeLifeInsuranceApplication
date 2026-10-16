@@ -46,7 +46,12 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { preserveEmailDisclosures } from "@/lib/formatApplicationEmail";
-import { DRAFT_KEY, prepareApplication, sanitizeResidency } from "@/lib/prepareApplication";
+import {
+  DRAFT_KEY,
+  draftSnapshotForStorage,
+  prepareApplication,
+  sanitizeResidency,
+} from "@/lib/prepareApplication";
 export const SECTIONS = [
   {
     id: "health",
@@ -220,6 +225,12 @@ function pathFromTarget(target: EventTarget | null) {
   const id = (target as HTMLElement | null)?.id ?? "";
   return id ? id.replace(/-(yes|no)$/, "") : "";
 }
+/** What was held back, said plainly: the draft is saving, one answer is not in it. */
+function incompleteAnswersCopy(count: number) {
+  return count === 1
+    ? "1 incomplete answer is not in the draft yet and will be added once it is valid."
+    : `${count} incomplete answers are not in the draft yet and will be added once they are valid.`;
+}
 export default function PracticeApplicationForm() {
   const [generation, setGeneration] = useState(0);
   return (
@@ -287,18 +298,23 @@ function Worksheet({ cleared, onClear }: {
     try {
       const { consents: unused, ...rest } = prepareApplication(getValues());
       void unused;
-      const parsed = practiceApplicationDraftSchema.safeParse(rest);
-      if (!parsed.success) {
+      // Incomplete answers are held out of the snapshot instead of blocking the
+      // whole save: a half-typed email must not cost the visitor the answers they
+      // already gave. The strict schema still gates the resume above and the send
+      // below, so nothing here weakens what is restored or what is transmitted.
+      const { snapshot, dropped } = draftSnapshotForStorage(rest);
+      if (!snapshot) {
         setDraftStatus(
-          "Draft contains incomplete or invalid entries. Finish those fields to save the latest changes.",
+          "Draft could not be saved. Keep this tab open or print a copy.",
         );
         return;
       }
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(parsed.data));
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(snapshot));
       setDraftStatus(
-        manual
+        (manual
           ? "Draft saved on this device."
-          : "Draft saved automatically on this device.",
+          : "Draft saved automatically on this device.") +
+          (dropped.length ? " " + incompleteAnswersCopy(dropped.length) : ""),
       );
     } catch {
       setDraftStatus(

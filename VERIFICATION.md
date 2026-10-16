@@ -40,3 +40,25 @@ The draft lifecycle follow-up was verified with component/server tests and the p
   is the segmented control).
 - No schema, question, label, option list or section was removed, merged or reworded; the schema
   file is untouched.
+
+## UX-H4 follow-up (autosave never blocks on an incomplete answer)
+
+- The draft snapshot is now written through `draftSnapshotForStorage` (`src/lib/prepareApplication.ts`,
+  mirrored byte-for-byte into `supabase/functions/_shared/prepareApplication.ts`, which the
+  client/server parity test requires): the field paths the draft schema refuses are dropped and
+  everything else is saved. Autosave used to reject the whole snapshot when any single answer
+  failed - a half-typed email (`rich@`) or phone number was enough - so an edit made while the
+  contact details were incomplete never reached the draft while the page still promised it was
+  saving the visitor. A refused array element is spliced out, so a bad medication row cannot take
+  the list with it.
+- The status line no longer claims a save that did not happen: `Draft saved automatically on this
+  device. 1 incomplete answer is not in the draft yet and will be added once it is valid.` The
+  strict parse still decides what a resume restores and what submit transmits - submit remains
+  unchanged and still refuses the incomplete answer (asserted directly in the new tests).
+- Automated checks on this tree: 282 passed in 14 files (`npx vitest run`), including 6 new tests
+  in `tests/autosave-never-blocks.test.tsx` (unit salvage, autosave with an incomplete email and
+  phone, resume of the salvaged draft, and submit still strict). Production build: passed
+  (`npm run build`).
+- The new tests were checked against the defect they describe: temporarily restoring the previous
+  strict-parse save makes 4 of the 6 fail, so they detect the regression rather than merely
+  passing beside it.
