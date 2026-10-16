@@ -16,7 +16,7 @@ export function validApplication() {
   }
   Object.assign(app.healthMedical, {
     dob: "1980-01-01",
-    age: 46,
+    age: Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", year: "numeric" }).format(new Date())) - 1980,
     stateOfBirth: "TX",
     genderSex: "Male",
   });

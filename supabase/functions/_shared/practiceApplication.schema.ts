@@ -11,14 +11,45 @@ const optLongText = longText.optional().or(z.literal(""));
 const yesNo = z.boolean();
 const optYesNo = z.boolean().optional();
 
+// Compare calendar parts explicitly: Date.parse normalizes dates such as February 30.
+function isCalendarDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return year >= 1 && month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth[month - 1];
+}
+
+const centralDateFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Chicago",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+function todayInCentral(): string {
+  const parts = centralDateFormatter.formatToParts(new Date());
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((value) => value.type === type)!.value;
+  return `${part("year").padStart(4, "0")}-${part("month")}-${part("day")}`;
+}
+
 const isoDate = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Use a valid date (YYYY-MM-DD)")
-  .refine((v) => !Number.isNaN(Date.parse(v)), "Invalid date");
+  .refine(isCalendarDate, "Invalid calendar date");
 
 const pastOrTodayDate = isoDate.refine(
-  (v) => new Date(v).getTime() <= Date.now(),
+  (value) => !isCalendarDate(value) || value <= todayInCentral(),
   "Date cannot be in the future"
+);
+
+// Empty strings, null and booleans must not become a newborn's age of zero.
+const applicantAge = z.preprocess(
+  (value) => typeof value === "number" || (typeof value === "string" && value.trim() !== "")
+    ? value
+    : undefined,
+  z.coerce.number().int().min(0).max(120)
 );
 
 const optDate = isoDate.optional().or(z.literal(""));
@@ -97,7 +128,7 @@ export const NICOTINE_PRODUCTS = [
 
 const healthMedicalBase = z.object({
   dob: pastOrTodayDate,
-  age: z.coerce.number().int().min(0).max(120),
+  age: applicantAge,
   stateOfBirth: z.enum(US_STATES),
   genderSex: z.enum(["Male", "Female", "Other", "Prefer not to say"]),
 
@@ -708,6 +739,20 @@ export const practiceApplicationDraftSchema = z
 export const practiceApplicationSubmitSchema = z
   .object(shape)
   .superRefine((app, ctx) => {
+    const today = todayInCentral();
+    const { dob, age } = app.healthMedical;
+    if (isCalendarDate(dob) && dob <= today) {
+      // Completed years; a February 29 birthday advances on March 1 in non-leap years.
+      const expectedAge = Number(today.slice(0, 4)) - Number(dob.slice(0, 4))
+        - (today.slice(5) < dob.slice(5) ? 1 : 0);
+      if (age !== expectedAge)
+        ctx.addIssue({
+          code: "custom",
+          path: ["healthMedical", "age"],
+          message: "Age must match your date of birth as of today (Central Time).",
+        });
+    }
+
     const sel = app.healthMedical.conditions_triggered;
 
     /* ---- Health condition modules ---- */

@@ -45,7 +45,12 @@ export function HealthSection() {
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField name="healthMedical.dob" label="Date of Birth" type="date" />
-        <TextField name="healthMedical.age" label="Age" type="number" />
+        <TextField
+          name="healthMedical.age"
+          label="Age"
+          type="number"
+          hint="Enter completed years as of today (Central Time)."
+        />
         <SelectField
           name="healthMedical.stateOfBirth"
           label="State of Birth"

@@ -69,7 +69,9 @@ Never-users can answer No to the new ever-use nicotine question without inventin
 
 Keep the client/server schema and preparation files synchronized, and deploy the updated `send-practice-application` function when releasing this revision. Website publication alone does not update server validation. Regression tests cover both schemas, the mocked handler, and the visible form flow without sending email.
 
-The remaining date rules use Date.parse and check age as a number; they do not ensure calendar rollover rejection or DOB/age agreement.
+Date-only answers must be real Gregorian calendar dates in YYYY-MM-DD form (years 0001–9999); impossible rollover dates are rejected, including in optional medical/history fields. DOB must be on or before today's date in America/Chicago. Submission requires Age to equal completed years since DOB as of that same Central Time date; a February 29 birthday advances on March 1 in a non-leap year. This is the worksheet's chronological age, not an insurer-specific issue-age calculation. Blank/null/boolean age values are not coerced to zero. Drafts can retain a DOB/age disagreement while it is being corrected; submission reports the error at Age. Other date fields retain their existing past/future and chronology rules.
+
+Calendar regression tests cover leap-year/century rules, Central Time midnight in standard/daylight time, future DOB, birthday age changes, draft leniency and rejection before any email provider call. Client/server schemas remain byte-identical and are synchronized with the website repository.
 
 ## Deployment status
 
