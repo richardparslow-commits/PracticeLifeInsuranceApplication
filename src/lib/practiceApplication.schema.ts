@@ -551,7 +551,6 @@ const drugBase = z.object({
 
 const residencyBase = z.object({
   res_citizen_or_resident: z.enum(["U.S. Citizen", "Permanent Resident", "Other"]),
-  res_green_card_or_visa_id: optText, // Advise users NOT to enter real ID numbers (see disclaimer §4)
   res_non_us_status: optText,
   res_high_risk_countries_2y: yesNo,
   res_high_risk_countries_details: optLongText,

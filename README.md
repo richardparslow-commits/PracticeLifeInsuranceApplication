@@ -85,3 +85,9 @@ The remaining date rules use Date.parse and check age as a number; they do not e
 ## Deployment status
 
 Code and local tests are included. No production Supabase configuration or Resend credentials were supplied, so no live email or production deployment has been performed.
+
+## Residency privacy
+
+The worksheet does not request visa or Green Card document IDs. Legacy ID values are removed from restored drafts, draft saves, print snapshots, and submissions. The server independently removes them before validation and email creation; both schemas also strip the retired field. Immigration status or visa type is retained only while Other is selected. Other residency and travel answers are preserved.
+
+Opening an older draft rewrites its saved copy to remove these details before a new edit is needed. If browser storage refuses that update, the worksheet uses safe answers in memory and displays a warning with a Save draft retry. The privacy regression tests use synthetic values and mocked email delivery.
