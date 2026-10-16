@@ -62,36 +62,85 @@ function useA11y(p: BaseProps) {
         .join(" ") || undefined,
   };
 }
+const YES_NO_OPTIONS = [
+  { value: "yes", label: "Yes" },
+  { value: "no", label: "No" },
+] as const;
+
+/**
+ * Segmented Yes / No control.
+ *
+ * Each answer is a full-width half of one card (>=48px tall), so the whole
+ * segment is the tap target on a phone. The Radix radio stays in the DOM as a
+ * transparent overlay covering its own half: it keeps the accessible name from
+ * the label, the `role="radio"` semantics, arrow-key behaviour, the submitted
+ * boolean and the ids (`<name>-yes` / `<name>-no`) used elsewhere.
+ */
 export function YesNoField(p: BaseProps) {
   const { control } = useFormContext();
   const a = useA11y(p);
+  const error = useFieldError(p.name);
   return (
     <FieldShell {...p}>
       <Controller
         name={p.name}
         control={control}
-        render={({ field }) => (
-          <RadioGroup
-            {...a}
-            id={p.name}
-            className="flex min-h-11 gap-6"
-            value={
-              field.value === true ? "yes" : field.value === false ? "no" : ""
-            }
-            onValueChange={(v) => field.onChange(v === "yes")}
-            onBlur={field.onBlur}
-            ref={field.ref}
-          >
-            <div className="flex items-center gap-2">
-              <RadioGroupItem id={`${p.name}-yes`} value="yes" />
-              <Label htmlFor={`${p.name}-yes`}>Yes</Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <RadioGroupItem id={`${p.name}-no`} value="no" />
-              <Label htmlFor={`${p.name}-no`}>No</Label>
-            </div>
-          </RadioGroup>
-        )}
+        render={({ field }) => {
+          const picked =
+            field.value === true ? "yes" : field.value === false ? "no" : null;
+          return (
+            <RadioGroup
+              {...a}
+              id={p.name}
+              className={cn(
+                "grid grid-cols-2 divide-x divide-input overflow-hidden rounded-lg border border-input bg-background shadow-sm",
+                error && "border-destructive",
+              )}
+              value={picked ?? ""}
+              onValueChange={(v) => field.onChange(v === "yes")}
+              onBlur={field.onBlur}
+              ref={field.ref}
+            >
+              {YES_NO_OPTIONS.map((option) => {
+                const selected = picked === option.value;
+                return (
+                  <div
+                    key={option.value}
+                    data-segment={option.value}
+                    data-selected={selected ? "true" : "false"}
+                    className={cn(
+                      "relative transition-colors focus-within:z-10 focus-within:ring-2 focus-within:ring-inset focus-within:ring-ring",
+                      selected ? "bg-primary" : "hover:bg-accent",
+                    )}
+                  >
+                    <RadioGroupItem
+                      id={`${p.name}-${option.value}`}
+                      value={option.value}
+                      className="absolute inset-0 h-full w-full rounded-none border-0 opacity-0 shadow-none"
+                    />
+                    <Label
+                      htmlFor={`${p.name}-${option.value}`}
+                      className={cn(
+                        "pointer-events-none flex min-h-12 w-full items-center justify-center gap-2 px-3 text-sm font-medium",
+                        selected ? "text-primary-foreground" : "text-foreground",
+                      )}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="grid h-3.5 w-3.5 shrink-0 place-content-center rounded-full border border-current"
+                      >
+                        {selected && (
+                          <span className="block h-1.5 w-1.5 rounded-full bg-current" />
+                        )}
+                      </span>
+                      {option.label}
+                    </Label>
+                  </div>
+                );
+              })}
+            </RadioGroup>
+          );
+        }}
       />
     </FieldShell>
   );
@@ -179,7 +228,12 @@ export function MultiSelectField(
         render={({ field }) => {
           const value: string[] = field.value ?? [];
           return (
-            <div role="group" {...a} className="grid gap-2 sm:grid-cols-2">
+            <div
+              role="group"
+              {...a}
+              className="grid gap-2 sm:grid-cols-2"
+              onBlur={field.onBlur}
+            >
               {p.options.map((o, i) => (
                 <label
                   key={o}

@@ -19,3 +19,24 @@
 No live Supabase deployment, real email delivery, full assistive-technology audit, or formal WCAG certification was performed. See README.md for unchanged source-schema limitations and setup requirements.
 
 The draft lifecycle follow-up was verified with component/server tests and the production build. The connected browser was unavailable during this follow-up, so the Lovable preview was not retested live; the Chrome observations above refer to the earlier verification.
+
+## UX-H1 + UX-H2 follow-up (segmented Yes/No answers, blur-time validation)
+
+- Every Yes/No question is now one segmented control: each half is a full-width >=48px tap
+  target, the chosen half fills with `--primary`, and the transparent Radix radio covers its own
+  half. Measured in Chrome at 390 px: segment 157x48, page 324x50; the extreme corner of each half
+  hit-tests to the `role="radio"` button. Ids (`<name>-yes` / `<name>-no`), the accessible name from
+  the label, `role="radiogroup"` wiring, arrow-key selection and the stored boolean are unchanged.
+- Validation now reports an answer once the user leaves it (`mode: "onTouched"`) and keeps it live
+  afterwards (`reValidateMode: "onChange"`), implemented with the existing submit schema so no rule
+  was rewritten. Measured in Chrome: 0 error nodes while typing `9999` into Age, and after blurring
+  `healthMedical.age-error` renders with `aria-invalid="true"` and `aria-describedby` pointing at it.
+- A section-grouped summary lists unresolved items with a 44 px jump row per section
+  (`role="status"`, `data-error-summary`), grouped by worksheet order and mapping the eight module
+  keys onto `1. Health / Medical`. Consent and contact answers remain owned by the send gate.
+- Production build: passed (`npm run build`). Automated checks on the rebased tree: 276 passed in
+  13 files (`npx vitest run`), including 6 new tests in `tests/validation-ux.test.tsx`
+  (the sixth asserts that every rendered Yes/No question - base section or conditional module -
+  is the segmented control).
+- No schema, question, label, option list or section was removed, merged or reworded; the schema
+  file is untouched.
