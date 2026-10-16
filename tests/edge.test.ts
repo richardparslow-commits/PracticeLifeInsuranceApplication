@@ -92,4 +92,52 @@ describe("edge email handler", () => {
     ).toBe(503);
     expect(fetch).not.toHaveBeenCalled();
   });
+  it.each([null, { id: "" }, { id: "   " }, { id: 12 }])(
+    "rejects an unconfirmed default-provider receipt %j",
+    async (receipt) => {
+      const fetch = vi.fn().mockResolvedValue(Response.json(receipt));
+      const response = await createHandler({ env, fetch })(
+        request(validApplication()),
+      );
+      expect(response.status).toBe(502);
+      expect(fetch).toHaveBeenCalledTimes(1);
+    },
+  );
+  it("supports an injected server delivery without requiring Resend or exposing hidden answers", async () => {
+    const app = validApplication();
+    app.residencyTravel.res_green_card_or_visa_id =
+      "SYNTHETIC-PRIVATE-DO-NOT-SEND";
+    const fetch = vi.fn();
+    const send = vi
+      .fn()
+      .mockResolvedValue(
+        Response.json({ id: "synthetic-other-provider-receipt" }),
+      );
+    const response = await createHandler({
+      env: () => undefined,
+      fetch,
+      emailDelivery: { configured: true, send },
+    })(request(app));
+    expect(response.status).toBe(200);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send.mock.calls[0][0].to).toEqual([
+      "richardparslow@lifepolicypilot.blog",
+    ]);
+    expect(send.mock.calls[0][0].text).not.toContain(
+      "SYNTHETIC-PRIVATE-DO-NOT-SEND",
+    );
+  });
+  it("does not fall back to Resend when an injected delivery is unconfigured", async () => {
+    const fetch = vi.fn();
+    const send = vi.fn();
+    const response = await createHandler({
+      env,
+      fetch,
+      emailDelivery: { configured: false, send },
+    })(request(validApplication()));
+    expect(response.status).toBe(503);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(send).not.toHaveBeenCalled();
+  });
 });

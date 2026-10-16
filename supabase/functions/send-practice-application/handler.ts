@@ -3,10 +3,16 @@ import {
   canTransmit,
 } from "../_shared/practiceApplication.schema.ts";
 import { prepareApplication } from "../_shared/prepareApplication.ts";
+export type WorksheetEmail = { to: string[]; subject: string; text: string };
+export type EmailDelivery = {
+  configured: boolean;
+  send: (message: WorksheetEmail) => Promise<Response>;
+};
 type Dependencies = {
   env: (key: string) => string | undefined;
   fetch: typeof fetch;
   now?: () => Date;
+  emailDelivery?: EmailDelivery;
 };
 const LIMIT = 250_000;
 export function createHandler(deps: Dependencies) {
@@ -92,7 +98,8 @@ export function createHandler(deps: Dependencies) {
       });
     const apiKey = deps.env("RESEND_API_KEY");
     const from = deps.env("RESEND_FROM");
-    if (!apiKey || !from)
+    const delivery = deps.emailDelivery;
+    if (delivery ? !delivery.configured : !apiKey || !from)
       return reply(503, { error: "Email delivery is not configured" });
     const submittedAt = (deps.now?.() ?? new Date()).toISOString();
     const text =
@@ -102,24 +109,26 @@ export function createHandler(deps: Dependencies) {
       JSON.stringify(result.data, null, 2);
     // No database, storage, console logging, or echoing PHI in errors.
     try {
-      const response = await deps.fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from,
-          to: ["richardparslow@lifepolicypilot.blog"],
-          subject: "Practice Life Insurance Application",
-          text,
-        }),
-        signal: AbortSignal.timeout(20000),
-      });
+      const message: WorksheetEmail = {
+        to: ["richardparslow@lifepolicypilot.blog"],
+        subject: "Practice Life Insurance Application",
+        text,
+      };
+      const response = delivery
+        ? await delivery.send(message)
+        : await deps.fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ from, ...message }),
+            signal: AbortSignal.timeout(20000),
+          });
       if (!response.ok)
         return reply(502, { error: "Email service did not accept delivery" });
       const receipt = await response.json();
-      if (typeof receipt.id !== "string" || !receipt.id)
+      if (typeof receipt?.id !== "string" || !receipt.id.trim())
         return reply(502, { error: "Email acceptance was not confirmed" });
       return reply(200, { ok: true });
     } catch {
