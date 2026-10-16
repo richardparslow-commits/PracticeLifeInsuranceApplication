@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   FormProvider,
   useForm,
@@ -44,6 +44,7 @@ import {
   drugQs,
 } from "./form/questions";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 import { preserveEmailDisclosures } from "@/lib/formatApplicationEmail";
 import { DRAFT_KEY, prepareApplication, sanitizeResidency } from "@/lib/prepareApplication";
 export const SECTIONS = [
@@ -170,6 +171,55 @@ const progressKeys = [
   "occupationFinancial.occ_current_occupation",
   "occupationFinancial.occ_annual_salary",
 ];
+/** The worksheet section a validation path belongs to, so every error has a home. */
+function sectionForPath(path: string) {
+  const prefix = path.split(".")[0];
+  const direct = SECTIONS.find((section) => section.prefix === prefix);
+  if (direct) return { id: direct.id, title: direct.title };
+  if (prefix.endsWith("Module"))
+    return SECTIONS.find((section) => section.id === "health");
+  return undefined;
+}
+/** Consent + contact answers live outside the 12 sections, in their own block. */
+const CONTACT_BUCKET = { id: "contact", title: "Send a copy & consent" };
+/** Flatten react-hook-form's nested error object into dotted field paths. */
+function collectErrorPaths(errors: Record<string, unknown>, prefix = ""): string[] {
+  return Object.entries(errors).flatMap(([key, value]) => {
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (!value || typeof value !== "object") return [];
+    if (typeof (value as { message?: unknown }).message === "string") return [path];
+    return collectErrorPaths(value as Record<string, unknown>, path);
+  });
+}
+/** Group unresolved items by section, in worksheet order, for the jump list. */
+function summarizeErrors(paths: string[]) {
+  const rows = new Map<
+    string,
+    { id: string; title: string; count: number; firstPath: string }
+  >();
+  for (const path of paths) {
+    const bucket = sectionForPath(path) ?? CONTACT_BUCKET;
+    const existing = rows.get(bucket.id);
+    if (existing) existing.count += 1;
+    else
+      rows.set(bucket.id, {
+        id: bucket.id,
+        title: bucket.title,
+        count: 1,
+        firstPath: path,
+      });
+  }
+  const order = [...SECTIONS.map((section) => section.id), CONTACT_BUCKET.id];
+  return {
+    total: paths.length,
+    rows: [...rows.values()].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id)),
+  };
+}
+/** Map a blurred control back to its field path (both radio halves share one). */
+function pathFromTarget(target: EventTarget | null) {
+  const id = (target as HTMLElement | null)?.id ?? "";
+  return id ? id.replace(/-(yes|no)$/, "") : "";
+}
 export default function PracticeApplicationForm() {
   const [generation, setGeneration] = useState(0);
   return (
@@ -188,7 +238,10 @@ function Worksheet({ cleared, onClear }: {
   const initial = restored.answers;
   const methods = useForm<FieldValues>({
     defaultValues: initial,
-    mode: "onSubmit",
+    // An answer reports itself once the user has left it, then stays live while
+    // they edit. Submit still runs the full strict parse below.
+    mode: "onTouched",
+    reValidateMode: "onChange",
     shouldUnregister: false,
   });
   const { control, setError, clearErrors, getValues, reset } = methods;
@@ -215,6 +268,11 @@ function Worksheet({ cleared, onClear }: {
   const sendingRef = useRef(false);
   const sentRef = useRef(false);
   const hasEdited = useRef(false);
+  /** Field paths whose inline message this component owns (it clears them again). */
+  const inlineManaged = useRef<Set<string>>(new Set());
+  /** Field paths the user has already left, tracked independently of the library. */
+  const visited = useRef<Set<string>>(new Set());
+  const attemptedRef = useRef(false);
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -254,6 +312,55 @@ function Worksheet({ cleared, onClear }: {
     const timer = setTimeout(() => saveDraft(), 600);
     return () => clearTimeout(timer);
   }, [all, sent, isDirty]);
+  /**
+   * Validate the whole worksheet but surface only the problems the user already
+   * has context for: an answer reports itself after they leave it, and from then
+   * on as they type. Consent and contact answers stay owned by the send gate,
+   * which explains why they are required and marks the exact boxes. Submit is
+   * untouched: it still runs the full strict parse and blocks the send.
+   */
+  const applyAnswerErrors = useCallback(() => {
+    if (sentRef.current) return;
+    const parsed = practiceApplicationSubmitSchema.safeParse(
+      prepareApplication(getValues()),
+    );
+    const occurred = inlineManaged.current;
+    const next = new Set<string>();
+    if (!parsed.success) {
+      const touched = methods.formState.touchedFields as Record<string, unknown>;
+      const isTouched = (issuePath: (string | number)[]) => {
+        let node: unknown = touched;
+        for (const key of issuePath) {
+          if (node === null || typeof node !== "object") return false;
+          node = (node as Record<string | number, unknown>)[key];
+        }
+        return node === true;
+      };
+      for (const issue of parsed.error.issues) {
+        const top = String(issue.path[0] ?? "");
+        if (top === "consents" || top === "optionalContact") continue;
+        const path = issue.path.join(".");
+        if (!attemptedRef.current && !isTouched(issue.path) && !visited.current.has(path))
+          continue;
+        next.add(path);
+        setError(path, { message: issue.message });
+      }
+    }
+    const healed = [...occurred].filter((path) => !next.has(path));
+    if (healed.length) clearErrors(healed);
+    inlineManaged.current = next;
+  }, [clearErrors, getValues, methods, setError]);
+  useEffect(() => {
+    if (sent) return;
+    if (inlineManaged.current.size === 0 && !attempted) return;
+    const timer = setTimeout(() => applyAnswerErrors(), 300);
+    return () => clearTimeout(timer);
+  }, [all, sent, attempted, applyAnswerErrors]);
+  function handleBlur(event: React.FocusEvent<HTMLFormElement>) {
+    const path = pathFromTarget(event.target);
+    if (path) visited.current.add(path);
+    applyAnswerErrors();
+  }
   function deleteSubmittedDraft(retry = false) {
     let warning: string | null = null;
     try {
@@ -266,10 +373,7 @@ function Worksheet({ cleared, onClear }: {
     if (mounted.current) setCleanupWarning(warning);
   }
   function reveal(path: string) {
-    const prefix = path.split(".")[0];
-    const section =
-      SECTIONS.find((s) => s.prefix === prefix)?.id ||
-      (prefix.endsWith("Module") ? "health" : undefined);
+    const section = sectionForPath(path)?.id;
     if (section) setOpen((prev) => [...new Set([...prev, section])]);
     setTimeout(() => {
       const target =
@@ -288,6 +392,7 @@ function Worksheet({ cleared, onClear }: {
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (sendingRef.current) return;
+    attemptedRef.current = true;
     setAttempted(true);
     clearErrors();
     setBanner(null);
@@ -314,6 +419,11 @@ function Worksheet({ cleared, onClear }: {
     if (!parsed.success) {
       for (const issue of parsed.error.issues)
         setError(issue.path.join("."), { message: issue.message });
+      // From here on the inline pass owns these messages, so correcting an
+      // answer clears its highlight without another submit.
+      inlineManaged.current = new Set(
+        parsed.error.issues.map((issue) => issue.path.join(".")),
+      );
       setBanner(
         `Please fix ${parsed.error.issues.length} highlighted item(s). Nothing has been sent.`,
       );
@@ -345,6 +455,9 @@ function Worksheet({ cleared, onClear }: {
       sentRef.current = true;
       deleteSubmittedDraft();
       reset(EMPTY);
+      inlineManaged.current = new Set();
+      visited.current = new Set();
+      attemptedRef.current = false;
       if (mounted.current) setSent(true);
     } catch {
       if (mounted.current)
@@ -394,6 +507,7 @@ function Worksheet({ cleared, onClear }: {
       </div>
     );
   const errs = methods.formState.errors as Record<string, any>;
+  const summary = summarizeErrors(collectErrorPaths(errs));
   const answered = progressKeys.filter((k) => {
     const v = get(all, k);
     return v !== undefined && v !== "";
@@ -403,6 +517,7 @@ function Worksheet({ cleared, onClear }: {
     <FormProvider {...methods}>
       <form
         onSubmit={submit}
+        onBlur={handleBlur}
         noValidate
         autoComplete="off"
         aria-busy={sending}
@@ -445,6 +560,41 @@ function Worksheet({ cleared, onClear }: {
             <AlertTitle>Check your worksheet</AlertTitle>
             <AlertDescription>{banner}</AlertDescription>
           </Alert>
+        )}
+        {summary.rows.length > 0 && (
+          <div
+            role="status"
+            data-error-summary=""
+            className={cn(
+              "rounded-lg border px-4 py-3 text-sm",
+              attempted
+                ? "border-destructive/50 text-destructive"
+                : "bg-secondary text-foreground",
+            )}
+          >
+            <p className="font-medium">
+              {attempted
+                ? `${summary.total} highlighted item${summary.total === 1 ? "" : "s"} — nothing has been sent`
+                : `${summary.total} item${summary.total === 1 ? "" : "s"} still need${summary.total === 1 ? "s" : ""} an answer`}
+            </p>
+            <ul className="mt-2 max-h-72 space-y-1 overflow-y-auto">
+              {summary.rows.map((row) => (
+                <li key={row.id}>
+                  <button
+                    type="button"
+                    aria-label={`Go to ${row.title}`}
+                    className="flex min-h-11 w-full items-center justify-between gap-3 rounded px-1 text-left underline underline-offset-4 hover:bg-accent hover:no-underline"
+                    onClick={() => reveal(row.firstPath)}
+                  >
+                    <span>{row.title}</span>
+                    <span className="shrink-0 text-xs">
+                      {row.count} item{row.count === 1 ? "" : "s"}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
         {sending && (
           <p role="status">
