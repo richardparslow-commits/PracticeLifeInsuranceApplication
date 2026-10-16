@@ -253,6 +253,101 @@ describe("literal question and answer presentation", () => {
     );
   });
 
+  it.each([
+    [
+      "hypertensionModule",
+      "htn_current_meds",
+      "High Blood Pressure",
+      { htn_meds_last12months: true },
+    ],
+    [
+      "diabetesModule",
+      "dm_current_meds",
+      "Diabetes 1 or 2",
+      { dm_control_method: ["Oral Medication"] },
+    ],
+    ["asthmaModule", "asthma_current_meds", "Asthma", {}],
+  ] as const)(
+    "keeps %s medication disclosures prominent and preserves each row's printed condition context",
+    (section, key, trigger, parents) => {
+      const app = clear();
+      app.healthMedical!.conditions_triggered = [trigger];
+      (app as Record<string, unknown>)[section] = {
+        ...parents,
+        [key]: [{ name: "Synthetic module medication", dosage: "5 mg", frequency: "Daily" }],
+      };
+      const document = doc(app);
+      const question = (FIELD_REGISTRY[section] as Record<string, { question: string }>)[key]
+        .question;
+      const triage = rowFor(tableA(document), question);
+      expect(triage.querySelector("td:nth-child(3) li")!.textContent).toContain(
+        "Synthetic module medication",
+      );
+      const row = rowFor(categoryTable(document, "Health & Medical"), question);
+      expect(row.querySelector("td:first-child small")!.textContent).toBe(
+        section === "diabetesModule" ? "Diabetes" : trigger,
+      );
+      expect(row.querySelector("td:last-child li")!.textContent).toContain(
+        "Synthetic module medication",
+      );
+    },
+  );
+
+  it.each([false, true])(
+    "keeps all eight medical modules below a conservative HTML size budget (answered: %s)",
+    (answered) => {
+      const app = clear();
+      app.healthMedical!.conditions_triggered = [
+        "Stroke",
+        "Sleep Apnea",
+        "Seizures",
+        "High Blood Pressure",
+        "COPD",
+        "Diabetes 1 or 2",
+        "Arthritis",
+        "Asthma",
+        "Cancer",
+      ];
+      if (answered) {
+        for (const [section, fields] of Object.entries(FIELD_REGISTRY)) {
+          if (!section.endsWith("Module")) continue;
+          const values: Record<string, unknown> = {};
+          for (const [key, rule] of Object.entries(fields))
+            values[key] =
+              rule.kind === "boolean"
+                ? rule.risk === "false"
+                : rule.kind === "number"
+                  ? 7
+                  : ["array", "medications", "detailedMedications"].includes(rule.kind)
+                    ? []
+                    : "Synthetic answer";
+          (app as Record<string, unknown>)[section] = values;
+        }
+      }
+      const result = formatApplicationEmail(app, receivedAt);
+      expect(new TextEncoder().encode(result.html).byteLength).toBeLessThan(95_000);
+      const document = new DOMParser().parseFromString(result.html, "text/html");
+      const health = categoryTable(document, "Health & Medical");
+      expect(health.textContent).toContain(FIELD_REGISTRY.seizureModule.seizure_diagnosis.question);
+      expect(health.textContent).toContain(
+        FIELD_REGISTRY.cancerModule.cancer_location_diagnosis.question,
+      );
+      expect(JSON.parse(document.querySelector("details pre")!.textContent!)).toEqual(app);
+      // Routine follow-up details belong in the full Q&A table, without another
+      // verbose copy in the exception table. Flags and orphan notes stay in A.
+      if (answered) {
+        expect(health.textContent).toContain("Synthetic answer");
+        expect(tableA(document).textContent).not.toContain(
+          FIELD_REGISTRY.seizureModule.seizure_diagnosis.question,
+        );
+      } else {
+        expect(
+          rowFor(health, FIELD_REGISTRY.seizureModule.seizure_diagnosis.question).textContent,
+        ).toContain("Not provided");
+      }
+    },
+  );
+
   it("retains the complete JSON payload in compact, escaped print formatting", () => {
     const app = clear();
     app.optionalContact!.contact_name = '<script>"Synthetic" & test</script>';
