@@ -1,4 +1,4 @@
-import { practiceApplicationDraftSchema } from "./practiceApplication.schema";
+import { practiceApplicationDraftSchema } from "./practiceApplication.schema.ts";
 // Prune inactive answers before the draft/submit schemas validate the payload.
 type Answers = Record<string, any>;
 export const moduleConditions: Record<string, string[]> = {
