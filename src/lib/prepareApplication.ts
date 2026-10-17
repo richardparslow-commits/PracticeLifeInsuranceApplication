@@ -1,4 +1,4 @@
-import { practiceApplicationDraftSchema } from "./practiceApplication.schema";
+import { practiceApplicationDraftSchema } from "./practiceApplication.schema.ts";
 // Prune inactive answers before the draft/submit schemas validate the payload.
 type Answers = Record<string, any>;
 export const moduleConditions: Record<string, string[]> = {
@@ -311,7 +311,20 @@ export function draftSnapshotForStorage(values: Answers): {
     const parsed = practiceApplicationDraftSchema.safeParse(candidate);
     if (parsed.success) return { snapshot: parsed.data as Record<string, unknown>, dropped };
     let removed = 0;
-    for (const issue of parsed.error.issues) {
+    // Splice higher array indexes first. Removing a lower index first can move
+    // a valid answer into a different invalid answer's original path.
+    const issues = [...parsed.error.issues].sort((a, b) => {
+      for (let index = 0; index < Math.min(a.path.length, b.path.length); index += 1) {
+        const left = a.path[index];
+        const right = b.path[index];
+        if (left === right) continue;
+        return typeof left === "number" && typeof right === "number"
+          ? right - left
+          : String(left).localeCompare(String(right));
+      }
+      return b.path.length - a.path.length;
+    });
+    for (const issue of issues) {
       if (!dropRefusedLeaf(candidate, issue.path)) continue;
       dropped.push(issue.path.join("."));
       removed += 1;
