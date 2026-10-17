@@ -91,6 +91,15 @@ export function sanitizeResidency(input: Answers): Answers {
 }
 export function pruneHidden(input: Answers): Answers {
   const app = sanitizeResidency(input);
+  // No-specific explanations are active only for the literal boolean false.
+  for (const [section, parent, detail] of [
+    ["drivingRecord", "drv_valid_license", "drv_no_valid_license_details"],
+    ["residencyTravel", "res_lived_us_5y", "res_lived_us_5y_details"],
+    ["occupationFinancial", "occ_full_time_6mo", "occ_full_time_6mo_details"],
+  ]) {
+    if (app[section] && app[section][parent] !== false) delete app[section][detail];
+  }
+
   const selected = app.healthMedical?.conditions_triggered ?? [];
   if (!selected.includes("Other") && app.healthMedical)
     delete app.healthMedical.medical_other_conditions;

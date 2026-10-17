@@ -37,6 +37,9 @@ export function validApplication() {
     contact_email: "test@example.com",
     contact_phone: "5550101234",
   };
+  app.drivingRecord.drv_no_valid_license_details = "Synthetic No-answer follow-up for drivingRecord";
+  app.residencyTravel.res_lived_us_5y_details = "Synthetic No-answer follow-up for residencyTravel";
+  app.occupationFinancial.occ_full_time_6mo_details = "Synthetic No-answer follow-up for occupationFinancial";
   app.consents = { consent_contact: true, consent_disclaimer: true };
   delete app.seizureModule;
   delete app.respiratoryModule;

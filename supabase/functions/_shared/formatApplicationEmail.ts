@@ -137,6 +137,7 @@ export interface RiskyBehavior {
 }
 export interface DrivingRecord {
   drv_valid_license: boolean;
+  drv_no_valid_license_details?: string;
   drv_suspension_24m: boolean;
   drv_suspension_5y: boolean;
   drv_moving_violations_5y: boolean;
@@ -181,6 +182,7 @@ export interface ResidencyTravel {
   res_travel_outside_us_24m: boolean;
   res_travel_outside_us_details?: string;
   res_lived_us_5y: boolean;
+  res_lived_us_5y_details?: string;
   res_move_back_native_country: boolean;
   res_foreign_travel_details?: string;
 }
@@ -188,6 +190,7 @@ export interface OccupationFinancial {
   occ_current_occupation: string;
   occ_annual_salary: number;
   occ_full_time_6mo: boolean;
+  occ_full_time_6mo_details?: string;
   occ_weapon: boolean;
   occ_high_risk_occupation: boolean;
   occ_high_risk_details?: string;
@@ -445,6 +448,8 @@ export interface FieldRule {
   risk: "true" | "false" | "present" | "residency" | "none";
   flagLabel?: string;
   flagExplanation?: string;
+  /** Supported explanation shown with the existing parent flag; adds no new risk. */
+  detailField?: FieldPath;
   when?: readonly ParentCondition[];
 }
 type FieldKind<T> =
@@ -1380,6 +1385,14 @@ export const FIELD_REGISTRY = {
       kind: "boolean",
       risk: "false",
       flagLabel: "Does NOT hold a valid driver's license",
+      detailField: "drivingRecord.drv_no_valid_license_details",
+    },
+    drv_no_valid_license_details: {
+      question: "Why do you not currently have a valid driver’s license? Include your current license status.",
+      label: "Why do you not currently have a valid driver’s license? Include your current license status.",
+      kind: "string",
+      risk: "none",
+      when: [{ section: "drivingRecord", field: "drv_valid_license", equals: false }],
     },
     drv_suspension_24m: {
       question: "Within the past 24 months, license suspended/revoked or convicted of DUI?",
@@ -1659,6 +1672,14 @@ export const FIELD_REGISTRY = {
       kind: "boolean",
       risk: "false",
       flagLabel: "Has NOT lived in the U.S. for the past 5 years",
+      detailField: "residencyTravel.res_lived_us_5y_details",
+    },
+    res_lived_us_5y_details: {
+      question: "Where have you lived during the past five years? Include countries and approximate dates.",
+      label: "Where have you lived during the past five years? Include countries and approximate dates.",
+      kind: "string",
+      risk: "none",
+      when: [{ section: "residencyTravel", field: "res_lived_us_5y", equals: false }],
     },
     res_move_back_native_country: {
       question: "Does the Proposed Insured plan to move back to their native country?",
@@ -1700,6 +1721,14 @@ export const FIELD_REGISTRY = {
       kind: "boolean",
       risk: "false",
       flagLabel: "Has NOT worked full-time for the past 6 months",
+      detailField: "occupationFinancial.occ_full_time_6mo_details",
+    },
+    occ_full_time_6mo_details: {
+      question: "Why have you not worked full-time for the past six months? Include your current work status and approximate dates.",
+      label: "Why have you not worked full-time for the past six months? Include your current work status and approximate dates.",
+      kind: "string",
+      risk: "none",
+      when: [{ section: "occupationFinancial", field: "occ_full_time_6mo", equals: false }],
     },
     occ_weapon: {
       question: "Do you carry a weapon in your occupation?",
@@ -3689,6 +3718,8 @@ export function formatApplicationEmail(
       }
       const hasDisclosure = populated(value) || (value === false && rule.risk === "false");
       const answer = describeAnswer(section, key, value, rule, risk, note);
+      const detailPath = rule.detailField?.split(".");
+      const detailValue = detailPath ? object(input[detailPath[0]])[detailPath[1]] : undefined;
       if (
         category !== "consents" &&
         category !== "other" &&
@@ -3720,6 +3751,9 @@ export function formatApplicationEmail(
               ? "No (Flag)"
               : display(value),
           ...(note ? { note } : {}),
+          ...(risk && typeof detailValue === "string" && detailValue.trim()
+            ? { explanation: `Applicant explanation: ${detailValue.trim()}` }
+            : {}),
           ...(key === "res_foreign_travel_details" && note === ORPHAN_BADGE
             ? {
                 explanation:
@@ -3859,7 +3893,7 @@ export function formatApplicationEmail(
     <td>${escapeHtml(categoryLabel(item.category))}</td>
     <td>${contextHtml(item.section)}${escapeHtml(item.question)}</td>
     <td>${answerHtml(item)}</td>
-    <td style="color:${item.kind === "flag" ? "#9a3412" : "#475569"};">${escapeHtml(item.note ?? item.underwritingStatus)}${item.explanation ? `<p style="font-size:11px;margin:5px 0 0;">${escapeHtml(item.explanation)}</p>` : ""}</td>
+    <td style="color:${item.kind === "flag" ? "#9a3412" : "#475569"};">${escapeHtml(item.note ?? item.underwritingStatus)}${item.explanation ? `<p style="font-size:11px;margin:5px 0 0;">${escapeHtml(item.explanation).replace(/\n/g, "<br>")}</p>` : ""}</td>
   </tr>`,
     )
     .join("");

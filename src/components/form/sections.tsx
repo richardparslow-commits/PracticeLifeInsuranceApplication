@@ -351,9 +351,19 @@ export function AlcoholSection() {
 }
 
 export function DrivingSection() {
+  const { control } = useFormContext();
+  const validLicense = useWatch({ control, name: "drivingRecord.drv_valid_license" });
   return (
     <div className="space-y-5">
-      <YesNoList prefix="drivingRecord" qs={drivingQs} />
+      <YesNoList prefix="drivingRecord" qs={drivingQs.slice(0, 1)} />
+      {validLicense === false && (
+        <TextAreaField
+          name="drivingRecord.drv_no_valid_license_details"
+          label="Why do you not currently have a valid driver’s license? Include your current license status."
+          hint="Do not enter your driver’s license number."
+        />
+      )}
+      <YesNoList prefix="drivingRecord" qs={drivingQs.slice(1)} />
       <TextAreaField
         name="drivingRecord.drv_details"
         label="If Yes to any violation/accident question, provide dates, fault, and details"
@@ -470,6 +480,12 @@ export function ResidencySection() {
         name={`${P}.res_lived_us_5y`}
         label="Has the Proposed Insured lived consistently in the USA for the past 5 years?"
       />
+      {r.res_lived_us_5y === false && (
+        <TextAreaField
+          name={`${P}.res_lived_us_5y_details`}
+          label="Where have you lived during the past five years? Include countries and approximate dates."
+        />
+      )}
       <YesNoField
         name={`${P}.res_move_back_native_country`}
         label="Does the Proposed Insured plan to move back to their native country?"
@@ -484,6 +500,7 @@ export function ResidencySection() {
 
 export function OccupationSection() {
   const { control } = useFormContext();
+  const fullTime = useWatch({ control, name: "occupationFinancial.occ_full_time_6mo" });
   const hr = useWatch({
     control,
     name: "occupationFinancial.occ_high_risk_occupation",
@@ -504,6 +521,12 @@ export function OccupationSection() {
         name={`${P}.occ_full_time_6mo`}
         label="Working full-time (30+ hours/week) for the past six months?"
       />
+      {fullTime === false && (
+        <TextAreaField
+          name={`${P}.occ_full_time_6mo_details`}
+          label="Why have you not worked full-time for the past six months? Include your current work status and approximate dates."
+        />
+      )}
       <YesNoField
         name={`${P}.occ_weapon`}
         label="Do you carry a weapon in your occupation?"
