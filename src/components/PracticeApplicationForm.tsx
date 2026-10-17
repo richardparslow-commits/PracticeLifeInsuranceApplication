@@ -388,8 +388,11 @@ function Worksheet({
       };
       for (const issue of parsed.error.issues) {
         const top = String(issue.path[0] ?? "");
-        if (top === "consents" || top === "optionalContact") continue;
         const path = issue.path.join(".");
+        // Contact/consent errors begin at the send gate. Once submitted, keep
+        // their messages until the answer validates, rather than clearing them
+        // merely because the inline pass normally skips those fields.
+        if ((top === "consents" || top === "optionalContact") && !occurred.has(path)) continue;
         if (
           (!attemptedRef.current || resetValidation.current.has(top)) &&
           !isTouched(issue.path) &&

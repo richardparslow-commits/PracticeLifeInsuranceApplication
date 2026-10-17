@@ -3,6 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   cleanup,
+  act,
   fireEvent,
   render,
   screen,
@@ -146,34 +147,59 @@ describe.each([
 );
 
 describe("the salvaged draft does not weaken submit", () => {
-  it("still refuses to send an incomplete contact answer and reports the field", async () => {
-    seedValidDraft();
-    invoke.mockResolvedValue({ data: { ok: true }, error: null });
-    const user = userEvent.setup();
-    render(<PracticeApplicationForm />);
-    const email = screen.getByLabelText("Email address");
-    await user.clear(email);
-    await user.type(email, "rich@");
-    await user.click(
-      screen.getByRole("checkbox", { name: "Consent to Contact" }),
-    );
-    await user.click(
-      screen.getByRole("checkbox", { name: "Acknowledgment & Consent" }),
-    );
-    await user.click(
-      screen.getByRole("button", { name: "Submit / Contact Me" }),
-    );
-
-    await waitFor(() =>
+  it.each([
+    {
+      label: "Email address",
+      field: "contact_email",
+      invalid: "rich@",
+      valid: "synthetic@example.com",
+    },
+    {
+      label: "Cell phone number",
+      field: "contact_phone",
+      invalid: "555",
+      valid: "5550101234",
+    },
+  ])(
+    "keeps the $label error visible until corrected and never sends an invalid answer",
+    async ({ label, field, invalid, valid }) => {
+      seedValidDraft();
+      invoke.mockResolvedValue({ data: { ok: true }, error: null });
+      const user = userEvent.setup();
+      render(<PracticeApplicationForm />);
+      const input = screen.getByLabelText(label);
+      fireEvent.change(input, { target: { value: invalid } });
+      await user.click(
+        screen.getByRole("checkbox", { name: "Consent to Contact" }),
+      );
+      await user.click(
+        screen.getByRole("checkbox", { name: "Acknowledgment & Consent" }),
+      );
+      await user.click(
+        screen.getByRole("button", { name: "Submit / Contact Me" }),
+      );
+      await screen.findByText(/Please fix 1 highlighted item/);
+      // Let the 300 ms inline validation and 600 ms autosave run. The field must
+      // remain highlighted while its value is still invalid, not just briefly.
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 650));
+      });
+      expect(input).toHaveAttribute("aria-invalid", "true");
       expect(
-        document.getElementById("optionalContact.contact_email-error"),
-      ).not.toBeNull(),
-    );
-    expect(invoke).not.toHaveBeenCalled();
-    // Submit starts a 50 ms jump to the first bad field; let it run inside the
-    // test rather than after teardown, where it has no document left to scroll.
-    await new Promise((resolve) => setTimeout(resolve, 80));
-  });
+        document.getElementById(`optionalContact.${field}-error`),
+      ).not.toBeNull();
+      expect(invoke).not.toHaveBeenCalled();
+      fireEvent.change(input, { target: { value: valid } });
+      await waitFor(() =>
+        expect(input).toHaveAttribute("aria-invalid", "false"),
+      );
+      expect(
+        document.getElementById(`optionalContact.${field}-error`),
+      ).toBeNull();
+      expect(invoke).not.toHaveBeenCalled();
+    },
+    15000,
+  );
 });
 
 it("manually saves other answers, reports two held-back fields, and autosaves each correction", async () => {
