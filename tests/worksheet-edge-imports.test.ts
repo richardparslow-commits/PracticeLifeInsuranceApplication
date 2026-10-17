@@ -1,18 +1,12 @@
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { expect, it } from "vitest";
 
 it("resolves the worksheet Edge Function module graph with explicit Deno file extensions", () => {
   // Node/Vite accepts extensionless imports that the production Deno loader
   // rejects. Check the real entry point and every transitive relative import.
-  const root = fileURLToPath(
-    new URL(
-      "../supabase/functions/send-practice-application/",
-      import.meta.url,
-    ),
-  );
+  const root = path.resolve("supabase/functions/send-practice-application");
   const imports = JSON.parse(
     readFileSync(path.join(root, "deno.json"), "utf8"),
   ).imports;
