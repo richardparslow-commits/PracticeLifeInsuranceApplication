@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import PracticeApplicationForm from "../src/components/PracticeApplicationForm";
 import {
@@ -48,7 +54,10 @@ describe("draftSnapshotForStorage", () => {
         // A refused array element is spliced out, not left as a hole.
         medical_current_medications: ["not a row", { name: "Synthetic row" }],
       },
-      optionalContact: { contact_name: "Test Applicant", contact_email: "rich@" },
+      optionalContact: {
+        contact_name: "Test Applicant",
+        contact_email: "rich@",
+      },
     });
 
     expect(dropped).toHaveLength(2);
@@ -59,7 +68,9 @@ describe("draftSnapshotForStorage", () => {
       ]),
     );
     expect(snapshot).not.toBeNull();
-    expect(snapshot!.optionalContact).toEqual({ contact_name: "Test Applicant" });
+    expect(snapshot!.optionalContact).toEqual({
+      contact_name: "Test Applicant",
+    });
     expect(snapshot!.healthMedical).toMatchObject({
       age: 46,
       medical_current_medications: [{ name: "Synthetic row" }],
@@ -143,11 +154,15 @@ describe("the salvaged draft does not weaken submit", () => {
     const email = screen.getByLabelText("Email address");
     await user.clear(email);
     await user.type(email, "rich@");
-    await user.click(screen.getByRole("checkbox", { name: "Consent to Contact" }));
+    await user.click(
+      screen.getByRole("checkbox", { name: "Consent to Contact" }),
+    );
     await user.click(
       screen.getByRole("checkbox", { name: "Acknowledgment & Consent" }),
     );
-    await user.click(screen.getByRole("button", { name: "Submit / Contact Me" }));
+    await user.click(
+      screen.getByRole("button", { name: "Submit / Contact Me" }),
+    );
 
     await waitFor(() =>
       expect(
@@ -160,3 +175,73 @@ describe("the salvaged draft does not weaken submit", () => {
     await new Promise((resolve) => setTimeout(resolve, 80));
   });
 });
+
+it("manually saves other answers, reports two held-back fields, and autosaves each correction", async () => {
+  const app = validApplication();
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(app));
+  const user = userEvent.setup();
+  let view = render(<PracticeApplicationForm />);
+  const email = screen.getByLabelText("Email address");
+  const phone = screen.getByLabelText("Cell phone number");
+  fireEvent.change(email, { target: { value: "unfinished@" } });
+  fireEvent.change(phone, { target: { value: "555" } });
+  fireEvent.change(screen.getByLabelText("Name"), {
+    target: { value: "Latest Synthetic Applicant" },
+  });
+  await user.click(
+    screen.getByRole("checkbox", { name: "Consent to Contact" }),
+  );
+  await user.click(
+    screen.getByRole("checkbox", { name: "Acknowledgment & Consent" }),
+  );
+  await user.click(screen.getByRole("button", { name: "Save draft" }));
+  expect(
+    screen.getByText(/Draft saved on this device. 2 incomplete answers/),
+  ).toBeInTheDocument();
+  expect(email).toHaveValue("unfinished@");
+  expect(phone).toHaveValue("555");
+  expect(readDraft().optionalContact).toEqual({
+    contact_name: "Latest Synthetic Applicant",
+  });
+  expect(readDraft()).not.toHaveProperty("consents");
+  expect(readDraft().healthMedical).toEqual(app.healthMedical);
+  for (const section of [
+    "drivingRecord",
+    "residencyTravel",
+    "occupationFinancial",
+  ] as const)
+    expect(readDraft()[section]).toEqual(app[section]);
+
+  fireEvent.change(email, { target: { value: "synthetic@example.com" } });
+  await waitFor(() =>
+    expect(readDraft().optionalContact.contact_email).toBe(
+      "synthetic@example.com",
+    ),
+  );
+  expect(
+    screen.getByText(/1 incomplete answer is not in the draft yet/),
+  ).toBeInTheDocument();
+  fireEvent.change(phone, { target: { value: "5550101234" } });
+  await waitFor(() =>
+    expect(readDraft().optionalContact.contact_phone).toBe("5550101234"),
+  );
+  expect(
+    screen.queryByText(/incomplete answers? (?:is|are) not in the draft yet/),
+  ).not.toBeInTheDocument();
+  view.unmount();
+  view = render(<PracticeApplicationForm />);
+  expect(screen.getByLabelText("Name")).toHaveValue(
+    "Latest Synthetic Applicant",
+  );
+  expect(screen.getByLabelText("Email address")).toHaveValue(
+    "synthetic@example.com",
+  );
+  expect(screen.getByLabelText("Cell phone number")).toHaveValue("5550101234");
+  expect(
+    screen.getByRole("checkbox", { name: "Consent to Contact" }),
+  ).not.toBeChecked();
+  expect(
+    screen.getByRole("checkbox", { name: "Acknowledgment & Consent" }),
+  ).not.toBeChecked();
+  expect(invoke).not.toHaveBeenCalled();
+}, 20000);
