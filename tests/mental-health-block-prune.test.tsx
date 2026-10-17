@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import "@testing-library/jest-dom/vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { FormProvider, useForm } from "react-hook-form";
 import { MentalHealthSection } from "../src/components/form/sections";
@@ -19,12 +20,15 @@ import { MENTAL_HEALTH_OPTIONS } from "../src/lib/practiceApplication.schema";
  * condition is checked, the history/current-treatment answer is Yes, or the
  * free-text box names a condition. When it collapses, the answers inside it were
  * kept by `pruneHidden`, so the visitor could not see - or retract - answers that
- * the saved draft and the mailed copy still carried.
+ * the draft and active validation still carried. Original disclosures remain
+ * separately annotated in the email audit.
  *
  * A realistic filled block: Yes/No answers are booleans (the detail fields of a
  * Yes/No question only survive while that parent is true), text and date answers
  * are strings.
  */
+afterEach(cleanup);
+
 const BLOCK_ANSWERS: Record<string, unknown> = {
   mh_selected_other_text: "Other condition",
   mh_rx_details: "Sertraline 50 mg daily",
@@ -69,11 +73,11 @@ describe("a collapsed mental-health detail block", () => {
     for (const field of MENTAL_HEALTH_DETAIL_FIELDS)
       expect(
         pruned.mentalHealth[field],
-        `${field} would have been mailed with the block closed`,
+        `${field} must be inactive while the block is closed`,
       ).toBeUndefined();
   });
 
-  it("leaves none of them in the application that submit transmits either", () => {
+  it("leaves none of them in the active validation snapshot", () => {
     const submitted = prepareApplication(collapsed());
     for (const field of MENTAL_HEALTH_DETAIL_FIELDS)
       expect(submitted.mentalHealth[field]).toBeUndefined();
@@ -82,8 +86,13 @@ describe("a collapsed mental-health detail block", () => {
   });
 
   it("leaves none of them in the draft snapshot autosave writes", () => {
-    const { snapshot } = draftSnapshotForStorage(prepareApplication(collapsed()));
-    const mentalHealth = (snapshot?.mentalHealth ?? {}) as Record<string, unknown>;
+    const { snapshot } = draftSnapshotForStorage(
+      prepareApplication(collapsed()),
+    );
+    const mentalHealth = (snapshot?.mentalHealth ?? {}) as Record<
+      string,
+      unknown
+    >;
     for (const field of MENTAL_HEALTH_DETAIL_FIELDS)
       expect(mentalHealth[field]).toBeUndefined();
   });
@@ -141,11 +150,15 @@ describe("an open mental-health detail block", () => {
     expect(mentalHealthDetailVisible(open().mentalHealth)).toBe(true);
     expect(mentalHealthDetailVisible(collapsed().mentalHealth)).toBe(false);
     expect(mentalHealthDetailVisible(undefined)).toBe(false);
-    expect(mentalHealthDetailVisible({ mh_selected_conditions: [] })).toBe(false);
-    expect(mentalHealthDetailVisible({ mh_conditions: "No conditions apply" })).toBe(
+    expect(mentalHealthDetailVisible({ mh_selected_conditions: [] })).toBe(
       false,
     );
-    expect(mentalHealthDetailVisible({ mh_conditions: "depression" })).toBe(true);
+    expect(
+      mentalHealthDetailVisible({ mh_conditions: "No conditions apply" }),
+    ).toBe(false);
+    expect(mentalHealthDetailVisible({ mh_conditions: "depression" })).toBe(
+      true,
+    );
   });
 });
 
@@ -158,9 +171,7 @@ describe("the prune list and the rendered block stay one thing", () => {
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
     const names = [
-      ...source
-        .slice(start, end)
-        .matchAll(/name=\{`\$\{P\}\.([a-z0-9_]+)`\}/g),
+      ...source.slice(start, end).matchAll(/name=\{`\$\{P\}\.([a-z0-9_]+)`\}/g),
     ].map((match) => match[1]);
     return [...new Set(names)];
   };
@@ -171,9 +182,11 @@ describe("the prune list and the rendered block stay one thing", () => {
 
   it("prunes every field the block renders, and nothing else", () => {
     // Equality in both directions: a field added to the block without being added
-    // to the list would keep being mailed (what UX-H5 was), and a list entry no
+    // to the list would remain in drafts/active validation, and a list entry no
     // longer rendered in the block would delete a visible answer somewhere else.
-    expect(new Set(renderedBlockFields())).toEqual(new Set(MENTAL_HEALTH_DETAIL_FIELDS));
+    expect(new Set(renderedBlockFields())).toEqual(
+      new Set(MENTAL_HEALTH_DETAIL_FIELDS),
+    );
     const pruned = pruneHidden(collapsed());
     for (const field of renderedBlockFields())
       expect(pruned.mentalHealth[field], field).toBeUndefined();
@@ -190,32 +203,41 @@ describe("the notice the section shows when a populated block collapses", () => 
     );
   }
 
-  const option = MENTAL_HEALTH_OPTIONS.find((value) => value !== "Other") as string;
+  const option = MENTAL_HEALTH_OPTIONS.find(
+    (value) => value !== "Other",
+  ) as string;
 
   it("appears with the collapsed block and clears when the block comes back", async () => {
     const user = userEvent.setup();
     render(
       <Harness
-        values={{ mh_selected_conditions: [option], mh_selected_dx_date: "2019-04-02" }}
+        values={{
+          mh_selected_conditions: [option],
+          mh_selected_dx_date: "2019-04-02",
+        }}
       />,
     );
 
-    expect(screen.getByText("Additional Mental Health Details")).toBeInTheDocument();
+    expect(
+      screen.getByText("Additional Mental Health Details"),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("status")).toBeNull();
 
     await user.click(screen.getByRole("checkbox", { name: option }));
 
     expect(screen.queryByText("Additional Mental Health Details")).toBeNull();
     expect(screen.getByRole("status")).toHaveTextContent(
-      /not shown while this block is closed/,
+      /not saved in your draft or print copy/,
     );
     expect(screen.getByRole("status")).toHaveTextContent(
-      /saved draft and the copy that is sent leave them out/,
+      /included in the email as inactive disclosure notes/,
     );
 
     await user.click(screen.getByRole("checkbox", { name: option }));
 
-    expect(screen.getByText("Additional Mental Health Details")).toBeInTheDocument();
+    expect(
+      screen.getByText("Additional Mental Health Details"),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("status")).toBeNull();
     expect(screen.getByDisplayValue("2019-04-02")).toBeInTheDocument();
   });

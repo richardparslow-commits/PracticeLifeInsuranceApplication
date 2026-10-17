@@ -107,8 +107,7 @@ export function MentalHealthSection() {
   const v = useWatch({ control, name: "mentalHealth" }) ?? {};
   const P = "mentalHealth";
   const sel: string[] = v.mh_selected_conditions ?? [];
-  // One rule, shared with `pruneHidden`: the block is on screen exactly while the
-  // saved draft and the mailed copy are allowed to carry it.
+  // Share the visibility rule with draft/print preparation and active validation.
   const showDetail = mentalHealthDetailVisible(v);
   const hiddenAnswers = MENTAL_HEALTH_DETAIL_FIELDS.some((field) => {
     const value = v[field];
@@ -288,9 +287,11 @@ export function MentalHealthSection() {
       )}
       {!showDetail && hiddenAnswers && (
         <p role="status" className="text-xs text-muted-foreground">
-          You answered the hidden mental-health details, but they are not shown
-          while this block is closed, so the saved draft and the copy that is sent
-          leave them out. Check a condition to bring them back.
+          These additional mental-health answers are hidden and are not saved in
+          your draft or print copy. If you submit before leaving this page,
+          previously entered details are included in the email as inactive
+          disclosure notes. Reopen these questions to review or edit them, or
+          reset this section to remove them.
         </p>
       )}
     </div>
