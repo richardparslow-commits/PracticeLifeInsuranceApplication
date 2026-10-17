@@ -540,6 +540,7 @@ const riskyBase = z.object({
 
 const drivingBase = z.object({
   drv_valid_license: yesNo,
+  drv_no_valid_license_details: optLongText,
   drv_suspension_24m: yesNo,
   drv_suspension_5y: yesNo,
   drv_moving_violations_5y: yesNo,
@@ -588,6 +589,7 @@ const residencyBase = z.object({
   res_travel_outside_us_24m: yesNo,
   res_travel_outside_us_details: optLongText,
   res_lived_us_5y: yesNo,
+  res_lived_us_5y_details: optLongText,
   res_move_back_native_country: yesNo,
   res_foreign_travel_details: optLongText,
 });
@@ -596,6 +598,7 @@ const occupationBase = z.object({
   occ_current_occupation: text.min(1, "Required"),
   occ_annual_salary: z.coerce.number().min(0, "Enter a valid amount"),
   occ_full_time_6mo: yesNo,
+  occ_full_time_6mo_details: optLongText,
   occ_weapon: yesNo,
   occ_high_risk_occupation: yesNo,
   occ_high_risk_details: optLongText,
@@ -878,6 +881,7 @@ export const practiceApplicationSubmitSchema = z
 
     /* ---- Driving ---- */
     const d = app.drivingRecord;
+    requireIf(ctx, d.drv_valid_license === false, ["drivingRecord", "drv_no_valid_license_details"], d.drv_no_valid_license_details, "Please explain your current license status.");
     const drvYes =
       d.drv_suspension_24m || d.drv_suspension_5y || d.drv_moving_violations_5y ||
       d.drv_careless_reckless_5y || d.drv_more_than_two_violations || d.drv_accidents;
@@ -907,11 +911,13 @@ export const practiceApplicationSubmitSchema = z
 
     /* ---- Residency ---- */
     const rs = app.residencyTravel;
+    requireIf(ctx, rs.res_lived_us_5y === false, ["residencyTravel", "res_lived_us_5y_details"], rs.res_lived_us_5y_details, "Please describe where you lived during the past five years.");
     requireIf(ctx, rs.res_citizen_or_resident === "Other", ["residencyTravel", "res_non_us_status"], rs.res_non_us_status, "Provide immigration status or visa type");
     requireIf(ctx, rs.res_high_risk_countries_2y, ["residencyTravel", "res_high_risk_countries_details"], rs.res_high_risk_countries_details, "Provide countries, dates, and purpose");
     requireIf(ctx, rs.res_travel_outside_us_24m, ["residencyTravel", "res_travel_outside_us_details"], rs.res_travel_outside_us_details, "Where?");
 
     /* ---- Occupation ---- */
+    requireIf(ctx, app.occupationFinancial.occ_full_time_6mo === false, ["occupationFinancial", "occ_full_time_6mo_details"], app.occupationFinancial.occ_full_time_6mo_details, "Please explain your employment status during the past six months.");
     requireIf(ctx, app.occupationFinancial.occ_high_risk_occupation, ["occupationFinancial", "occ_high_risk_details"], app.occupationFinancial.occ_high_risk_details, "Provide details");
 
     /* ---- Military ---- */

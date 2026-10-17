@@ -47,7 +47,7 @@ describe("literal question and answer presentation", () => {
         expect(rule.question.trim().length).toBeGreaterThan(0);
         count++;
       }
-    expect(count).toBe(336);
+    expect(count).toBe(339);
     const lists = {
       healthMedical: healthQs,
       nicotineSmoking: nicotineQs,
