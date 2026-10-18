@@ -7,3 +7,24 @@
 .consent-missing{animation:consentFlash 2s ease-in-out infinite;border:2px solid #a91919}
 @media(prefers-reduced-motion:reduce){.consent-missing{animation:none;background:#a91919;color:white}}
 @media print{body{background:white}.no-print,button,[data-slot=accordion-trigger] svg{display:none!important}[data-slot=accordion-content]{display:block!important;height:auto!important;overflow:visible!important}[data-slot=accordion-item]{break-inside:auto}textarea{height:auto;overflow:visible}header{display:none}.print-values{display:block!important}.screen-form{display:none!important}}
+
+@media print {
+  [data-practice-worksheet] > :not(.print-values) { display: none !important; }
+  .print-values { color: #111; font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.35; }
+  .print-values .worksheet-print-title { margin: 0 0 8pt; font-size: 18pt; }
+  .print-values .worksheet-print-disclosure { font-weight: bold; margin: 0 0 6pt; }
+  .print-values .worksheet-print-time, .print-values .worksheet-print-note { margin: 4pt 0; font-size: 9pt; }
+  .print-values .worksheet-print-section { margin-top: 14pt; }
+  .print-values h1, .print-values h2, .print-values h3 { font-family: inherit; margin: 0 0 5pt; break-after: avoid; page-break-after: avoid; }
+  .print-values .worksheet-print-section > h2 { border-bottom: 1px solid #777; padding-bottom: 3pt; font-size: 12pt; }
+  .print-values .worksheet-print-module > h3 { margin-top: 9pt; font-size: 10.5pt; }
+  .print-values .worksheet-print-empty { margin: 3pt 0; color: #444; }
+  .print-values .worksheet-print-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .print-values .worksheet-print-question { width: 67%; }
+  .print-values thead { display: table-header-group; }
+  .print-values tr { break-inside: avoid; page-break-inside: avoid; }
+  .print-values th, .print-values td { border-bottom: 1px solid #ddd; padding: 4pt 5pt; vertical-align: top; text-align: left; overflow-wrap: anywhere; word-break: normal; white-space: pre-wrap; }
+  .print-values tbody th { font-weight: normal; }
+  .print-values ul { margin: 0; padding-left: 12pt; }
+  .print-values li { margin: 0 0 3pt; }
+}

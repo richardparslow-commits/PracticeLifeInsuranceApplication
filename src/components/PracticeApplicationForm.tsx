@@ -35,6 +35,7 @@ import {
 } from "./form/sections";
 import { RiskySection } from "./form/RiskySection";
 import { ConsentSection } from "./form/ConsentSection";
+import { PrintableWorksheet } from "./form/PrintableWorksheet";
 import {
   healthQs,
   nicotineQs,
@@ -631,6 +632,7 @@ function Worksheet({
   return (
     <FormProvider {...methods}>
       <form
+        data-practice-worksheet=""
         onSubmit={submit}
         onBlur={handleBlur}
         noValidate
@@ -792,14 +794,7 @@ function Worksheet({
             />
           </div>
         </fieldset>
-        <div className="print-values hidden">
-          <h2 className="text-2xl">
-            Practice worksheet — not a formal application
-          </h2>
-          <pre className="whitespace-pre-wrap break-words text-xs">
-            {JSON.stringify(prepareApplication(all), null, 2)}
-          </pre>
-        </div>
+        <PrintableWorksheet application={all} />
         <div className="no-print flex flex-wrap gap-3">
           <Button type="submit" disabled={sending}>
             {sending ? "Sending…" : "Submit / Contact Me"}
