@@ -651,7 +651,7 @@ function Worksheet({
         <p className="text-sm text-muted-foreground">
           Your draft is saved automatically in this browser, including health
           and financial answers. Use a private device. Consent checkboxes are
-          never saved. Sending a copy is optional.
+          never saved. Sending a copy is optional. Sending requires your name, email address and cell phone number.
         </p>
         <div className="no-print sticky top-0 z-10 space-y-2 border-b bg-background/95 py-3 backdrop-blur">
           <div className="flex justify-between gap-4 text-sm">

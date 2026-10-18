@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 type BaseProps = {
   name: string;
   label: string;
@@ -148,6 +148,8 @@ export function YesNoField(p: BaseProps) {
 export function TextField(
   p: BaseProps & {
     type?: "text" | "date" | "month" | "number" | "tel" | "email";
+    autoComplete?: ComponentProps<"input">["autoComplete"];
+    inputMode?: ComponentProps<"input">["inputMode"];
   },
 ) {
   const { register } = useFormContext();
@@ -158,6 +160,8 @@ export function TextField(
         {...a}
         id={p.name}
         type={p.type ?? "text"}
+        autoComplete={p.autoComplete}
+        inputMode={p.inputMode}
         maxLength={500}
         min={p.type === "number" ? 0 : undefined}
         step={p.type === "number" ? "any" : undefined}
