@@ -89,26 +89,38 @@ export function ConsentSection({
   return (
     <div className="space-y-6">
       <div className="space-y-4 rounded-lg border p-4">
-        <h3 className="font-semibold">Optional: Send a copy to Richard</h3>
+        <h3 className="font-semibold">Send a copy to Richard (optional)</h3>
         <p className="text-sm text-muted-foreground">
-          Completing this worksheet does not require sending it. To send a copy
-          and request a call, fill in your details and check both boxes below.
+          Saving and printing do not require contact details or consent. To send a copy and request
+          a call, provide your name, email address and cell phone number, then check both boxes below.
+          Your preferred contact time is optional.
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextField name="optionalContact.contact_name" label="Name" />
+          <TextField
+            name="optionalContact.contact_name"
+            label="Name"
+            hint="Required to send a copy. Initials or first name are fine."
+            autoComplete="section-practice-contact name"
+          />
           <TextField
             name="optionalContact.contact_email"
             label="Email address"
             type="email"
+            hint="Required to send a copy."
+            autoComplete="section-practice-contact email"
           />
           <TextField
             name="optionalContact.contact_phone"
             label="Cell phone number"
             type="tel"
+            hint="Required to send a copy."
+            autoComplete="section-practice-contact tel"
+            inputMode="tel"
           />
           <TextField
             name="optionalContact.contact_preferred_time"
             label="Preferred time for me to reach out"
+            hint="Optional, including when sending a copy."
           />
         </div>
       </div>
