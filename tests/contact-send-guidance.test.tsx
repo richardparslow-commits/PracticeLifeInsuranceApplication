@@ -164,7 +164,7 @@ describe("optional sending and required contact details", () => {
     expect(sent.optionalContact.contact_preferred_time).toBeUndefined();
   }, 20000);
 
-  it.each(["contact_name", "contact_email", "contact_phone"])(
+  it.each(["contact_name", "contact_email", "contact_phone"] as const)(
     "keeps %s required on both client and server",
     (key) => {
       const app = validApplication();
