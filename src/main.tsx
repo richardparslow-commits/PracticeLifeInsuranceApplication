@@ -29,7 +29,7 @@ function Page() {
         </div>
       </header>
       <main id="worksheet" className="mx-auto max-w-5xl px-4 py-10 sm:px-8">
-        <div className="mx-auto mb-8 max-w-3xl">
+        <div className="no-print mx-auto mb-8 max-w-3xl">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[.2em] text-primary">
             Life Insurance Broker Advocate
           </p>
@@ -44,7 +44,7 @@ function Page() {
         </div>
         <PracticeApplicationForm />
       </main>
-      <footer className="border-t p-6 text-center text-sm text-muted-foreground">
+      <footer className="no-print border-t p-6 text-center text-sm text-muted-foreground">
         Richard Francis Parslow · Life Insurance Broker Advocate / Life Policy
         Pilot
         <br />

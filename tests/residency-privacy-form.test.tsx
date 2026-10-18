@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import PracticeApplicationForm from "../src/components/PracticeApplicationForm";
 import { DRAFT_KEY } from "../src/lib/prepareApplication";
@@ -112,11 +112,14 @@ describe("residency privacy through the worksheet", () => {
     expect(
       JSON.parse(localStorage.getItem(DRAFT_KEY)!).residencyTravel,
     ).not.toHaveProperty("res_non_us_status");
+    fireEvent(window, new Event("beforeprint"));
     const printSnapshot = container.querySelector(".print-values");
     expect(printSnapshot).not.toBeNull();
     const printed = printSnapshot?.textContent;
     expect(printed).not.toContain("Synthetic temporary visa");
     expect(printed).not.toContain(privateMarker);
+    expect(printed).toContain("Synthetic travel itinerary");
+    fireEvent(window, new Event("afterprint"));
     await user.click(
       screen.getByRole("checkbox", { name: "Consent to Contact" }),
     );
@@ -132,7 +135,9 @@ describe("residency privacy through the worksheet", () => {
     expect(submitted.residencyTravel).not.toHaveProperty(
       "res_green_card_or_visa_id",
     );
-    expect(submitted.residencyTravel.res_non_us_status).toBe("Synthetic temporary visa");
+    expect(submitted.residencyTravel.res_non_us_status).toBe(
+      "Synthetic temporary visa",
+    );
     expect(submitted.residencyTravel.res_foreign_travel_details).toBe(
       "Synthetic travel itinerary",
     );
@@ -148,6 +153,7 @@ describe("residency privacy through the worksheet", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       /could not remove private residency details/,
     );
+    fireEvent(window, new Event("beforeprint"));
     expect(container.querySelector(".print-values")?.textContent).not.toContain(
       privateMarker,
     );
